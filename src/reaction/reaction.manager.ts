@@ -15,10 +15,6 @@ export class ReactionManager implements ReactionRepository {
         return ReactionRepository.updateById(id, reaction);
     }
 
-    static updateMany(reactionFilter: Partial<IReaction>, reaction: Partial<IReaction>) {
-        return ReactionRepository.updateMany(reactionFilter, reaction);
-    }
-
     static deleteById(id: string) {
         return ReactionRepository.deleteById(id);
     }

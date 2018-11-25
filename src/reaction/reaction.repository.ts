@@ -23,19 +23,6 @@ export class ReactionRepository {
         ).exec();
     }
 
-    static updateMany(reactionFilter: Partial<IReaction>, reaction: Partial<IReaction>)
-        : Promise<any> {
-
-        if (Object.keys(reaction).length === 0) {
-            throw new ServerError('Update data is required.');
-        }
-
-        return ReactionModel.updateMany(
-            reactionFilter,
-            { $set: reaction },
-        ).exec();
-    }
-
     static deleteById(id: string)
         : Promise<IReaction | null> {
         return ReactionModel.findByIdAndRemove(

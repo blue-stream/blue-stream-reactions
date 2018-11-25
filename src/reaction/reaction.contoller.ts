@@ -10,24 +10,9 @@ export class ReactionController {
         res.json(await ReactionManager.create(req.body.reaction));
     }
 
-    static async createMany(req: Request, res: Response) {
-        res.json(await ReactionManager.createMany(req.body.reactions));
-    }
-
     static async updateById(req: Request, res: Response) {
         const updated = await ReactionManager.updateById(req.params.id, req.body.reaction);
         if (!updated) {
-            throw new ReactionNotFoundError();
-        }
-
-        res.json(updated);
-    }
-
-    static async updateMany(req: Request, res: Response) {
-
-        const updated: UpdateResponse = await ReactionManager.updateMany(req.body.reactionFilter, req.body.reaction);
-
-        if (updated.n === 0) {
             throw new ReactionNotFoundError();
         }
 

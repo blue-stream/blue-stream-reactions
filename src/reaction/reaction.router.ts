@@ -7,9 +7,7 @@ const ReactionRouter: Router = Router();
 
 ReactionRouter.post('/', ReactionValidator.canCreate, Wrapper.wrapAsync(ReactionController.create));
 
-
 ReactionRouter.post('/many', ReactionValidator.canCreateMany, Wrapper.wrapAsync(ReactionController.createMany));
-ReactionRouter.put('/many', ReactionValidator.canUpdateMany, Wrapper.wrapAsync(ReactionController.updateMany));
 ReactionRouter.put('/:id', ReactionValidator.canUpdateById, Wrapper.wrapAsync(ReactionController.updateById));
 ReactionRouter.delete('/:id', ReactionValidator.canDeleteById, Wrapper.wrapAsync(ReactionController.deleteById));
 ReactionRouter.get('/one', ReactionValidator.canGetOne, Wrapper.wrapAsync(ReactionController.getOne));
