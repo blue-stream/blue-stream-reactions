@@ -1,7 +1,8 @@
 
-import { IReaction } from './reaction.interface';
+import { IReaction, ReactionType } from './reaction.interface';
 import { ReactionModel } from './reaction.model';
 import { ServerError } from '../utils/errors/applicationError';
+import { Document } from 'mongoose';
 
 export class ReactionRepository {
     static create(reaction: IReaction)
@@ -14,27 +15,20 @@ export class ReactionRepository {
         return ReactionModel.insertMany(reactions);
     }
 
-    static updateById(id: string, reaction: Partial<IReaction>)
-        : Promise<IReaction | null> {
-        return ReactionModel.findByIdAndUpdate(
-            id,
-            { $set: reaction },
-            { new: true, runValidators: true },
-        ).exec();
+    static delete(resource: string, user: string): Promise<IReaction & Document> {
+        return ReactionModel.deleteOne({
+            resource,
+            user,
+        }).exec();
     }
 
-    static deleteById(id: string)
-        : Promise<IReaction | null> {
-        return ReactionModel.findByIdAndRemove(
-            id,
-        ).exec();
-    }
-
-    static getById(id: string)
-        : Promise<IReaction | null> {
-        return ReactionModel.findById(
-            id,
-        ).exec();
+    static update(resource: string, user: string, type: ReactionType) {
+        return ReactionModel
+            .findOneAndUpdate(
+                { resource, user },
+                { $set: { type } },
+                { new: true, runValidators: true })
+            .exec();
     }
 
     static getOne(reactionFilter: Partial<IReaction>)

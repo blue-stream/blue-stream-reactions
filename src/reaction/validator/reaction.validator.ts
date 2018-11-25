@@ -1,21 +1,19 @@
 import { Request, Response, NextFunction } from 'express';
 import { ReactionValidatons } from './reaction.validations';
 import { PropertyInvalidError, IdInvalidError } from '../../utils/errors/userErrors';
-import { IReaction } from '../reaction.interface';
+import { IReaction, ReactionType } from '../reaction.interface';
 
 export class ReactionValidator {
 
     static canCreate(req: Request, res: Response, next: NextFunction) {
-        next(ReactionValidator.validateProperty(req.body.reaction.property));
+        next(
+            ReactionValidator.validateUser(req.body.user) ||
+            ReactionValidator.validateReactionType(req.body.type) ||
+            ReactionValidator.validateResource(req.body.resource) ||
+            ReactionValidator.validateResourceType(req.body.resourceType),
+            );
     }
 
-    static canCreateMany(req: Request, res: Response, next: NextFunction) {
-        const propertiesValidations: (Error | undefined)[] = req.body.reactions.map((reaction: IReaction) => {
-            return ReactionValidator.validateProperty(reaction.property);
-        });
-
-        next(ReactionValidator.getNextValueFromArray(propertiesValidations));
-    }
 
     static canUpdateById(req: Request, res: Response, next: NextFunction) {
         next(
@@ -47,15 +45,7 @@ export class ReactionValidator {
         next();
     }
 
-    private static validateProperty(property: string) {
-        if (!ReactionValidatons.isPropertyValid(property)) {
-            return new PropertyInvalidError();
-        }
-
-        return undefined;
-    }
-
-    private static validateId(id: string) {
+    private static validateResource(id: string) {
         if (!ReactionValidatons.isIdValid(id)) {
             return new IdInvalidError();
         }
@@ -63,15 +53,27 @@ export class ReactionValidator {
         return undefined;
     }
 
-    private static getNextValueFromArray(validationsArray: (Error | undefined)[]) {
-        let nextValue: Error | undefined;
-
-        for (let index = 0; index < validationsArray.length; index++) {
-            if (validationsArray[index] !== undefined) {
-                nextValue = validationsArray[index];
-            }
+    private static validateReactionType(reactionType: string) {
+        if (!ReactionValidatons.isReactionTypeValid(reactionType)) {
+            return new ReactionTypeInvalid();
         }
 
-        return nextValue;
+        return undefined;
+    }
+
+    private static validateResourceType(reactionType: string) {
+        if (!ReactionValidatons.isResourceTypeValid(reactionType)) {
+            return new ResourceTypeInvalid();
+        }
+
+        return undefined;
+    }
+
+    private static validateUser(user: string) {
+        if (!ReactionValidatons.isUserValid(user)) {
+            return new UserIdInvalidError();
+        }
+
+        return undefined;
     }
 }
