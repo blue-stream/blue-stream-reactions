@@ -2,24 +2,21 @@ import { Types } from 'mongoose';
 import { createRequest, createResponse } from 'node-mocks-http';
 import { sign } from 'jsonwebtoken';
 import { config } from '../../config';
+import { ReactionType, ResourceType, IReaction } from '../reaction.interface';
 
 export const responseMock = createResponse();
 
 export class ValidRequestMocks {
-    readonly validProperty: string = '12345';
-    readonly validProperty2: string = '23456';
-    readonly validProperty3: string = '34567';
+    readonly validResource: string = '5bf54919902f5a46a0fb2e73';
+    readonly validResourceType: ResourceType = ResourceType.Video;
+    readonly validType: ReactionType = ReactionType.Like;
+    readonly validUser: string = 'a@a';
 
-    readonly reaction = {
-        property: this.validProperty,
-    };
-
-    readonly reaction2 = {
-        property: this.validProperty2,
-    };
-
-    readonly reaction3 = {
-        property: this.validProperty3,
+    readonly reaction: IReaction = {
+        resource: this.validResource,
+        resourceType: this.validResourceType,
+        type: this.validType,
+        user: this.validUser,
     };
 
     readonly reactionFilter = this.reaction;
@@ -32,66 +29,37 @@ export class ValidRequestMocks {
         headers: {
             authorization: this.authorizationHeader,
         },
-        body: {
-            reaction: this.reaction,
-        },
+        body: this.reaction,
     });
 
-    createMany = createRequest({
-        method: 'POST',
-        url: '/api/reaction/many/',
-        headers: {
-            authorization: this.authorizationHeader,
-        },
-        body: {
-            reactions: [
-                this.reaction,
-                this.reaction2,
-                this.reaction3,
-            ],
-        },
-    });
-
-    updateMany = createRequest({
+    update = createRequest({
         method: 'PUT',
-        url: '/api/reaction/many',
+        url: '/api/reaction/',
         headers: {
             authorization: this.authorizationHeader,
         },
-        body: {
-            reactionFilter: this.reactionFilter,
-            reaction: this.reaction,
+        query: {
+            resource: this.reaction.resource,
+            user: this.reaction.user,
         },
+        body: { type: this.reaction.type },
     });
 
-    updateById = createRequest({
-        method: 'PUT',
-        url: '/api/reaction/:id',
-        headers: {
-            authorization: this.authorizationHeader,
-        },
-        params: {
-            id: new Types.ObjectId(),
-        },
-        body: {
-            reaction: this.reaction,
-        },
-    });
-
-    deleteById = createRequest({
+    delete = createRequest({
         method: 'DELETE',
-        url: '/api/reaction/:id',
+        url: '/api/reaction/',
         headers: {
             authorization: this.authorizationHeader,
         },
-        params: {
-            id: new Types.ObjectId(),
+        query: {
+            resource: this.reaction.resource,
+            user: this.reaction.user,
         },
     });
 
     getOne = createRequest({
         method: 'GET',
-        url: `/api/reaction/one?reactionFilter={'property':${this.validProperty}}`,
+        url: `/api/reaction/one?resource=${this.validResource}&resourceType=${this.validResourceType}&type=${this.validType}&user=${this.validUser}`,
         headers: {
             authorization: this.authorizationHeader,
         },
@@ -100,7 +68,7 @@ export class ValidRequestMocks {
 
     getMany = createRequest({
         method: 'GET',
-        url: `/api/reaction/many?reactionFilter={'property':${this.validProperty}}`,
+        url: `/api/reaction/many?resource=${this.validResource}&resourceType=${this.validResourceType}&type=${this.validType}&user=${this.validUser}`,
         headers: {
             authorization: this.authorizationHeader,
         },
@@ -109,21 +77,19 @@ export class ValidRequestMocks {
 
     getAmount = createRequest({
         method: 'GET',
-        url: `/api/reaction/amount?reactionFilter={'property':${this.validProperty}}`,
+        url: `/api/reaction/amount?resource=${this.validResource}&resourceType=${this.validResourceType}&type=${this.validType}&user=${this.validUser}`,
         headers: {
             authorization: this.authorizationHeader,
         },
         query: this.reaction,
     });
 
-    getById = createRequest({
+    getAllTypesAmountsOfResource = createRequest({
         method: 'GET',
-        url: '/api/reaction/:id',
+        url: `/api/reaction/${this.validResource}/amount`,
         headers: {
             authorization: this.authorizationHeader,
         },
-        params: {
-            id: new Types.ObjectId(),
-        },
+        params: { resource: this.reaction.resource },
     });
 }

@@ -1,6 +1,11 @@
 import { Request, Response, NextFunction } from 'express';
 import { ReactionValidatons } from './reaction.validations';
-import { PropertyInvalidError, IdInvalidError } from '../../utils/errors/userErrors';
+import {
+    ReactionTypeInvalidError,
+    ResourceInvalidError,
+    ResourceTypeInvalidError,
+    UserInvalidError,
+} from '../../utils/errors/userErrors';
 import { IReaction, ReactionType } from '../reaction.interface';
 
 export class ReactionValidator {
@@ -11,26 +16,22 @@ export class ReactionValidator {
             ReactionValidator.validateReactionType(req.body.type) ||
             ReactionValidator.validateResource(req.body.resource) ||
             ReactionValidator.validateResourceType(req.body.resourceType),
-            );
+        );
     }
 
-
-    static canUpdateById(req: Request, res: Response, next: NextFunction) {
+    static canUpdate(req: Request, res: Response, next: NextFunction) {
         next(
-            ReactionValidator.validateId(req.params.id) ||
-            ReactionValidator.validateProperty(req.body.reaction.property));
+            ReactionValidator.validateResource(req.query.resource) ||
+            ReactionValidator.validateUser(req.query.user) ||
+            ReactionValidator.validateReactionType(req.body.type),
+        );
     }
 
-    static canUpdateMany(req: Request, res: Response, next: NextFunction) {
-        next(ReactionValidator.validateProperty(req.body.reaction.property));
-    }
-
-    static canDeleteById(req: Request, res: Response, next: NextFunction) {
-        next(ReactionValidator.validateId(req.params.id));
-    }
-
-    static canGetById(req: Request, res: Response, next: NextFunction) {
-        next(ReactionValidator.validateId(req.params.id));
+    static canDelete(req: Request, res: Response, next: NextFunction) {
+        next(
+            ReactionValidator.validateResource(req.body.resource) ||
+            ReactionValidator.validateUser(req.body.user),
+        );
     }
 
     static canGetOne(req: Request, res: Response, next: NextFunction) {
@@ -45,9 +46,13 @@ export class ReactionValidator {
         next();
     }
 
+    static canGetAllTypesAmountsOfResource(req: Request, res: Response, next: NextFunction) {
+        next();
+    }
+
     private static validateResource(id: string) {
         if (!ReactionValidatons.isIdValid(id)) {
-            return new IdInvalidError();
+            return new ResourceInvalidError();
         }
 
         return undefined;
@@ -55,7 +60,7 @@ export class ReactionValidator {
 
     private static validateReactionType(reactionType: string) {
         if (!ReactionValidatons.isReactionTypeValid(reactionType)) {
-            return new ReactionTypeInvalid();
+            return new ReactionTypeInvalidError();
         }
 
         return undefined;
@@ -63,7 +68,7 @@ export class ReactionValidator {
 
     private static validateResourceType(reactionType: string) {
         if (!ReactionValidatons.isResourceTypeValid(reactionType)) {
-            return new ResourceTypeInvalid();
+            return new ResourceTypeInvalidError();
         }
 
         return undefined;
@@ -71,7 +76,7 @@ export class ReactionValidator {
 
     private static validateUser(user: string) {
         if (!ReactionValidatons.isUserValid(user)) {
-            return new UserIdInvalidError();
+            return new UserInvalidError();
         }
 
         return undefined;

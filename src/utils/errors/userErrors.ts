@@ -1,19 +1,31 @@
 import { UserError } from './applicationError';
 
-export class PropertyInvalidError extends UserError {
+export class ResourceInvalidError extends UserError {
     constructor(message?: string) {
-        super(message || `Property is invalid`, 400);
+        super(message || 'Resource is invalid', 400);
     }
 }
 
-export class IdInvalidError extends UserError {
+export class ReactionTypeInvalidError extends UserError {
     constructor(message?: string) {
-        super(message || `Id is invalid`, 400);
+        super(message || 'ReactionType is invalid', 400);
+    }
+}
+
+export class ResourceTypeInvalidError extends UserError {
+    constructor(message?: string) {
+        super(message || 'ResourceType is invalid', 400);
+    }
+}
+
+export class UserInvalidError extends UserError {
+    constructor(message?: string) {
+        super(message || 'User is invalid', 400);
     }
 }
 
 export class ReactionNotFoundError extends UserError {
     constructor(message?: string) {
-        super(message || `Reaction not found`, 404);
+        super(message || 'Reaction not found', 404);
     }
 }

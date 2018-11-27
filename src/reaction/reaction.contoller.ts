@@ -10,8 +10,9 @@ export class ReactionController {
         res.json(await ReactionManager.create(req.body.reaction));
     }
 
-    static async updateById(req: Request, res: Response) {
-        const updated = await ReactionManager.updateById(req.params.id, req.body.reaction);
+    static async update(req: Request, res: Response) {
+        const updated = await ReactionManager.update(
+            req.query.resource, req.query.user, req.body.type);
         if (!updated) {
             throw new ReactionNotFoundError();
         }
@@ -19,22 +20,14 @@ export class ReactionController {
         res.json(updated);
     }
 
-    static async deleteById(req: Request, res: Response) {
-        const deleted = await ReactionManager.deleteById(req.params.id);
+    static async delete(req: Request, res: Response) {
+        const deleted = await ReactionManager.delete(
+            req.body.resource, req.body.user);
         if (!deleted) {
             throw new ReactionNotFoundError();
         }
 
         res.json(deleted);
-    }
-
-    static async getById(req: Request, res: Response) {
-        const reaction = await ReactionManager.getById(req.params.id);
-        if (!reaction) {
-            throw new ReactionNotFoundError();
-        }
-
-        res.json(reaction);
     }
 
     static async getOne(req: Request, res: Response) {
@@ -52,5 +45,9 @@ export class ReactionController {
 
     static async getAmount(req: Request, res: Response) {
         res.json(await ReactionManager.getAmount(req.query));
+    }
+
+    static async getAllTypesAmountsOfResource(req: Request, res: Response) {
+        res.json(await ReactionManager.getAllTypesAmountsOfResource(req.query.resource));
     }
 }

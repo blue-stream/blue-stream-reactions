@@ -15,13 +15,6 @@ export class ReactionRepository {
         return ReactionModel.insertMany(reactions);
     }
 
-    static delete(resource: string, user: string): Promise<IReaction & Document> {
-        return ReactionModel.deleteOne({
-            resource,
-            user,
-        }).exec();
-    }
-
     static update(resource: string, user: string, type: ReactionType) {
         return ReactionModel
             .findOneAndUpdate(
@@ -29,6 +22,13 @@ export class ReactionRepository {
                 { $set: { type } },
                 { new: true, runValidators: true })
             .exec();
+    }
+
+    static delete(resource: string, user: string): Promise<IReaction & Document> {
+        return ReactionModel.deleteOne({
+            resource,
+            user,
+        }).exec();
     }
 
     static getOne(reactionFilter: Partial<IReaction>)
