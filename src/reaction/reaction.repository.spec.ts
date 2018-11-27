@@ -122,7 +122,7 @@ describe('Reaction Repository', function () {
         });
     });
 
-    describe('#updateById()', function () {
+    describe('#update()', function () {
 
         let createdReaction: IReaction;
 
@@ -134,7 +134,7 @@ describe('Reaction Repository', function () {
         context('When data is valid', function () {
 
             it('Should update an existsing reaction', async function () {
-                const updatedDoc = await ReactionRepository.updateById(createdReaction.id!, reactionDataToUpdate);
+                const updatedDoc = await ReactionRepository.update(createdReaction.id!, reactionDataToUpdate);
                 expect(updatedDoc).to.exist;
                 expect(updatedDoc).to.have.property('id', createdReaction.id);
                 for (const prop in reactionDataToUpdate) {
@@ -143,7 +143,7 @@ describe('Reaction Repository', function () {
             });
 
             it('Should not update an existing reaction when empty data provided', async function () {
-                const updatedDoc = await ReactionRepository.updateById(createdReaction.id!, {});
+                const updatedDoc = await ReactionRepository.update(createdReaction.id!, {});
                 expect(updatedDoc).to.exist;
                 expect(updatedDoc).to.have.property('id', createdReaction.id);
 
@@ -153,7 +153,7 @@ describe('Reaction Repository', function () {
             });
 
             it('Should return null when updated doc does not exists', async function () {
-                const updatedDoc = await ReactionRepository.updateById(new mongoose.Types.ObjectId().toHexString(), {});
+                const updatedDoc = await ReactionRepository.update(new mongoose.Types.ObjectId().toHexString(), {});
                 expect(updatedDoc).to.not.exist;
             });
         });
@@ -163,7 +163,7 @@ describe('Reaction Repository', function () {
                 let hasThrown = false;
 
                 try {
-                    await ReactionRepository.updateById(createdReaction.id as string, { property: null } as any);
+                    await ReactionRepository.update(createdReaction.id as string, { property: null } as any);
                 } catch (err) {
                     hasThrown = true;
                     expect(err).to.exist;
@@ -176,95 +176,7 @@ describe('Reaction Repository', function () {
         });
     });
 
-    describe('#updateMany()', function () {
-
-        beforeEach(async function () {
-            await ReactionRepository.createMany(reactionArr);
-        });
-
-        context('When data is valid', function () {
-
-            it('Should update many documents', async function () {
-                const updated = await ReactionRepository.updateMany(reactionFilter, reactionDataToUpdate);
-
-                const amountOfRequiredUpdates = reactionArr.filter((item: IReaction) => {
-                    let match = true;
-                    for (const prop in reactionFilter) {
-                        match = match && item[prop as keyof IReaction] === reactionFilter[prop as keyof IReaction];
-                    }
-
-                    return match;
-                }).length;
-
-                expect(updated).to.exist;
-                expect(updated).to.have.property('nModified', amountOfRequiredUpdates);
-
-                const documents = await ReactionRepository.getMany(reactionDataToUpdate);
-                expect(documents).to.exist;
-                expect(documents).to.be.an('array');
-                expect(documents).to.have.lengthOf(amountOfRequiredUpdates);
-            });
-
-            it('Should update all documents when no filter passed', async function () {
-                const updated = await ReactionRepository.updateMany({}, reactionDataToUpdate);
-                expect(updated).to.exist;
-                expect(updated).to.have.property('nModified', reactionArr.length);
-
-                const documents = await ReactionRepository.getMany(reactionDataToUpdate);
-                expect(documents).to.exist;
-                expect(documents).to.be.an('array');
-                expect(documents).to.have.lengthOf(reactionArr.length);
-            });
-
-            it('Should do nothing when criteria does not match any document', async function () {
-                const updated = await ReactionRepository.updateMany(unexistingReaction, reactionDataToUpdate);
-                expect(updated).to.exist;
-                expect(updated).to.have.property('nModified', 0);
-
-                const documents = await ReactionRepository.getMany(reactionDataToUpdate);
-                expect(documents).to.exist;
-                expect(documents).to.be.an('array');
-                expect(documents).to.have.lengthOf(0);
-            });
-
-        });
-
-        context('When data is invalid', function () {
-
-            it('Should throw error when empty data provided', async function () {
-                let hasThrown = false;
-
-                try {
-                    await ReactionRepository.updateMany(reactionFilter, {});
-                } catch (err) {
-                    hasThrown = true;
-                    expect(err).to.exist;
-                    expect(err instanceof ServerError).to.be.true;
-                } finally {
-                    expect(hasThrown).to.be.true;
-                }
-            });
-
-            it('Should not update documents when invalid data passed', async function () {
-                await ReactionRepository.updateMany({}, unknownProperty);
-
-                const documents = await ReactionRepository.getMany({});
-                expect(documents).to.exist;
-                expect(documents).to.be.an('array');
-                expect(documents).to.satisfy((documents: IReaction[]) => {
-                    documents.forEach((doc: IReaction) => {
-                        for (const prop in unknownProperty) {
-                            expect(doc).to.not.have.property(prop);
-                        }
-                    });
-
-                    return true;
-                });
-            });
-        });
-    });
-
-    describe('#deleteById()', function () {
+    describe('#delete()', function () {
 
         let document: IReaction;
 
@@ -275,16 +187,16 @@ describe('Reaction Repository', function () {
         context('When data is valid', function () {
 
             it('Should delete document by id', async function () {
-                const deleted = await ReactionRepository.deleteById(document.id!);
+                const deleted = await ReactionRepository.delete(document.id!);
                 expect(deleted).to.exist;
                 expect(deleted).to.have.property('id', document.id);
 
-                const doc = await ReactionRepository.getById(document.id!);
+                const doc = await ReactionRepository.getOne(document.id!);
                 expect(doc).to.not.exist;
             });
 
             it('Should return null when document not exists', async function () {
-                const deleted = await ReactionRepository.deleteById(new mongoose.Types.ObjectId().toHexString());
+                const deleted = await ReactionRepository.delete(new mongoose.Types.ObjectId().toHexString());
                 expect(deleted).to.not.exist;
             });
         });
@@ -294,54 +206,13 @@ describe('Reaction Repository', function () {
                 let hasThrown = false;
 
                 try {
-                    await ReactionRepository.deleteById('invalid id');
+                    await ReactionRepository.delete('invalid id');
                 } catch (err) {
                     hasThrown = true;
                     expect(err).to.exist;
                     expect(err).to.have.property('name', 'CastError');
                     expect(err).to.have.property('kind', 'ObjectId');
                     expect(err).to.have.property('path', '_id');
-                } finally {
-                    expect(hasThrown).to.be.true;
-                }
-            });
-        });
-    });
-
-    describe('#getById()', function () {
-
-        context('When data is valid', function () {
-
-            let document: IReaction;
-            beforeEach(async function () {
-                document = await ReactionRepository.create(reaction);
-            });
-
-            it('Should return document by id', async function () {
-                const doc = await ReactionRepository.getById(document.id!);
-                expect(doc).to.exist;
-                expect(doc).to.have.property('id', document.id);
-                for (const prop in reaction) {
-                    expect(doc).to.have.property(prop, reaction[prop as keyof IReaction]);
-                }
-            });
-
-            it('Should return null when document not exists', async function () {
-                const doc = await ReactionRepository.getById(validId);
-                expect(doc).to.not.exist;
-            });
-        });
-
-        context('When data is invalid', function () {
-            it('Should throw error when id is not in correct format', async function () {
-                let hasThrown = false;
-
-                try {
-                    await ReactionRepository.getById(invalidId);
-                } catch (err) {
-                    hasThrown = true;
-
-                    expect(err).to.exist;
                 } finally {
                     expect(hasThrown).to.be.true;
                 }
@@ -516,5 +387,4 @@ describe('Reaction Repository', function () {
             });
         });
     });
-
 });
