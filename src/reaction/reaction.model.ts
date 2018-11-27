@@ -29,7 +29,10 @@ const reactionSchema: mongoose.Schema = new mongoose.Schema(
     },
     {
         autoIndex: false,
-        timestamps: true,
+        timestamps: {
+            createdAt: false,
+            updatedAt: true,
+        },
         id: false,
     });
 
