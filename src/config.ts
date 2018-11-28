@@ -21,11 +21,11 @@ export const config = {
         username: process.env.RMQ_USERNAME || 'guest',
     },
     server: {
-        port: 3000,
+        port: 5004,
         name: 'reaction',
     },
     authentication: {
-        required: true,
+        required: false,
         secret: process.env.SECRET_KEY || 'bLue5tream@2018', // Don't use static value in production! remove from source control!
     },
 };
