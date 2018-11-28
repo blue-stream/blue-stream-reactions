@@ -3,7 +3,11 @@ import { ReactionRepository } from './reaction.repository';
 
 export class ReactionManager implements ReactionRepository {
     static async create(reaction: IReaction) {
-        const existingReaction: IReaction | null = await ReactionManager.getOne(reaction);
+        const existingReaction: IReaction | null =
+            await ReactionManager.getOne({
+                user: reaction.user,
+                resource: reaction.resource,
+            });
 
         if (existingReaction) {
             return Promise.resolve(existingReaction);
