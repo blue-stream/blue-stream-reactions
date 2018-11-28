@@ -1,5 +1,4 @@
 import * as mongoose from 'mongoose';
-import * as rabbit from './utils/rabbit';
 import { Server } from './server';
 import { Logger } from './utils/logger';
 import { config } from './config';
@@ -18,7 +17,6 @@ process.on('unhandledRejection', (err) => {
 process.on('SIGINT', async () => {
     try {
         console.log('User Termination');
-        
         await mongoose.disconnect();
         process.exit(0);
     } catch (error) {
@@ -27,21 +25,20 @@ process.on('SIGINT', async () => {
 });
 
 (async () => {
-    
     await mongoose.connect(
         `mongodb://${config.db.host}:${config.db.port}/${config.db.name}`,
         { useNewUrlParser: true },
     );
 
     console.log(`[MongoDB] connected to port ${config.db.port}`);
-    
+
     Logger.configure();
     Logger.log(syslogSeverityLevels.Informational, 'Server Started', `Port: ${config.server.port}`);
     console.log('Starting server');
     const server: Server = Server.bootstrap();
 
     server.app.on('close', () => {
-        
+
         mongoose.disconnect();
         console.log('Server closed');
     });
