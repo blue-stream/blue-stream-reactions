@@ -3,21 +3,40 @@ import { expect } from 'chai';
 import * as mongoose from 'mongoose';
 import { config } from '../config';
 import { ServerError } from '../utils/errors/applicationError';
-import { IReaction } from './reaction.interface';
+import { IReaction, ResourceType, ReactionType } from './reaction.interface';
 import { ReactionRepository } from './reaction.repository';
 
-const validId: string = new mongoose.Types.ObjectId().toHexString();
-const invalidId: string = 'invalid id';
 const reaction: IReaction = {
-    property: 'prop',
+    resource: '5bf54919902f5a46a0fb2e73',
+    resourceType: ResourceType.Video,
+    type: ReactionType.Like,
+    user: 'a@a',
 };
-const reactionArr: IReaction[] = ['prop', 'prop', 'prop', 'b', 'c', 'd'].map(item => ({ property: item }));
+
+const reaction2: IReaction = {
+    resource: '5bf54919902f5a46a0fb2e73',
+    resourceType: ResourceType.Video,
+    type: ReactionType.Dislike,
+    user: 'a@b',
+};
+
+const reactionArr: IReaction[] = [reaction, reaction2];
 const invalidReaction: any = {
-    property: { invalid: true },
+    resource: '12',
+    resourceType: 'Da',
+    type: 'Niet',
+    user: 'ab',
 };
-const reactionFilter: Partial<IReaction> = { property: 'prop' };
-const reactionDataToUpdate: Partial<IReaction> = { property: 'updated' };
-const unexistingReaction: Partial<IReaction> = { property: 'unexisting' };
+
+const reactionFilter: Partial<IReaction> = {
+    type: ReactionType.Like,
+    resourceType: ResourceType.Video,
+};
+
+const reactionDataToUpdate: Partial<IReaction> = { type: ReactionType.Dislike };
+const unexistingReaction: Partial<IReaction> = {
+    resource: '5bf54919902f5a46a0fb2e33',
+};
 const unknownProperty: Object = { unknownProperty: true };
 
 describe('Reaction Repository', function () {
@@ -37,30 +56,33 @@ describe('Reaction Repository', function () {
         context('When reaction is valid', function () {
             it('Should create reaction', async function () {
                 const createdReaction = await ReactionRepository.create(reaction);
+
                 expect(createdReaction).to.exist;
-                expect(createdReaction).to.have.property('property', 'prop');
-                expect(createdReaction).to.have.property('createdAt');
+                expect(createdReaction).to.have.property('resource', reaction.resource);
+                expect(createdReaction).to.have.property('resourceType', reaction.resourceType);
+                expect(createdReaction).to.have.property('type', reaction.type);
+                expect(createdReaction).to.have.property('user', reaction.user);
                 expect(createdReaction).to.have.property('updatedAt');
-                expect(createdReaction).to.have.property('_id').which.satisfies((id: any) => {
-                    return mongoose.Types.ObjectId.isValid(id);
-                });
             });
         });
 
         context('When reaction is invalid', function () {
-            it('Should throw validation error when incorrect property type', async function () {
+            it('Should throw validation error when given incorrect user', async function () {
                 let hasThrown = false;
 
                 try {
+                    const invalidReaction = reaction;
+                    invalidReaction.user = 'aa';
                     await ReactionRepository.create(invalidReaction);
                 } catch (err) {
                     hasThrown = true;
                     expect(err).to.exist;
                     expect(err).to.have.property('name', 'ValidationError');
-                    expect(err).to.have.property('message').that.matches(/cast.+failed/i);
+                    expect(err).to.have.property('message').that.matches(/Reaction validation failed: user/i);
                     expect(err).to.have.property('errors');
-                    expect(err.errors).to.have.property('property');
-                    expect(err.errors.property).to.have.property('name', 'CastError');
+                    expect(err.errors).to.have.property('user');
+                    expect(err.errors.user).to.have.property('name', 'ValidatorError');
+
                 } finally {
                     expect(hasThrown).to.be.true;
                 }
@@ -89,7 +111,7 @@ describe('Reaction Repository', function () {
 
                 expect(createdDocuments).to.exist;
                 expect(createdDocuments).to.be.an('array');
-                expect(createdDocuments).to.have.lengthOf(6);
+                expect(createdDocuments).to.have.lengthOf(reactionArr.length);
             });
 
             it('Should not create documents when empty array passed', async function () {
@@ -128,32 +150,26 @@ describe('Reaction Repository', function () {
 
         beforeEach(async function () {
             createdReaction = await ReactionRepository.create(reaction);
-            expect(createdReaction).have.property('id');
+            expect(createdReaction).have.property('updatedAt');
         });
 
         context('When data is valid', function () {
 
             it('Should update an existsing reaction', async function () {
-                const updatedDoc = await ReactionRepository.update(createdReaction.id!, reactionDataToUpdate);
+                const updatedDoc =
+                    await ReactionRepository.update(createdReaction.resource, createdReaction.user, reactionDataToUpdate.type!);
                 expect(updatedDoc).to.exist;
-                expect(updatedDoc).to.have.property('id', createdReaction.id);
-                for (const prop in reactionDataToUpdate) {
-                    expect(updatedDoc).to.have.property(prop, reactionDataToUpdate[prop as keyof IReaction]);
-                }
+                expect(updatedDoc).to.have.property('type', reactionDataToUpdate.type);
             });
 
             it('Should not update an existing reaction when empty data provided', async function () {
-                const updatedDoc = await ReactionRepository.update(createdReaction.id!, {});
+                const updatedDoc = await ReactionRepository.update(createdReaction.resource, createdReaction.user, undefined!);
                 expect(updatedDoc).to.exist;
-                expect(updatedDoc).to.have.property('id', createdReaction.id);
-
-                for (const prop in reaction) {
-                    expect(updatedDoc).to.have.property(prop, createdReaction[prop as keyof IReaction]);
-                }
+                expect(updatedDoc).to.have.property('type', reaction.type);
             });
 
             it('Should return null when updated doc does not exists', async function () {
-                const updatedDoc = await ReactionRepository.update(new mongoose.Types.ObjectId().toHexString(), {});
+                const updatedDoc = await ReactionRepository.update(new mongoose.Types.ObjectId().toHexString(), 'a@b', reactionDataToUpdate.type!);
                 expect(updatedDoc).to.not.exist;
             });
         });
@@ -163,7 +179,7 @@ describe('Reaction Repository', function () {
                 let hasThrown = false;
 
                 try {
-                    await ReactionRepository.update(createdReaction.id as string, { property: null } as any);
+                    await ReactionRepository.update(createdReaction.resource, createdReaction.user, invalidReaction.type);
                 } catch (err) {
                     hasThrown = true;
                     expect(err).to.exist;
@@ -178,35 +194,35 @@ describe('Reaction Repository', function () {
 
     describe('#delete()', function () {
 
-        let document: IReaction;
+        let createdReaction: IReaction;
 
         beforeEach(async function () {
-            document = await ReactionRepository.create(reaction);
+            createdReaction = await ReactionRepository.create(reaction);
         });
 
         context('When data is valid', function () {
 
-            it('Should delete document by id', async function () {
-                const deleted = await ReactionRepository.delete(document.id!);
+            it('Should delete document by resource & user', async function () {
+                const deleted = await ReactionRepository.delete(createdReaction.resource, createdReaction.user);
                 expect(deleted).to.exist;
-                expect(deleted).to.have.property('id', document.id);
+                expect(deleted).to.have.property('resource', createdReaction.resource);
 
-                const doc = await ReactionRepository.getOne(document.id!);
-                expect(doc).to.not.exist;
+                const getDeleted = await ReactionRepository.getOne(reaction);
+                expect(getDeleted).to.not.exist;
             });
 
             it('Should return null when document not exists', async function () {
-                const deleted = await ReactionRepository.delete(new mongoose.Types.ObjectId().toHexString());
+                const deleted = await ReactionRepository.delete(new mongoose.Types.ObjectId().toHexString(), 'a@v');
                 expect(deleted).to.not.exist;
             });
         });
 
         context('When data is invalid', function () {
-            it('Should throw error when id is not in the correct format', async function () {
+            it('Should throw error when resource is not in the correct format', async function () {
                 let hasThrown = false;
 
                 try {
-                    await ReactionRepository.delete('invalid id');
+                    await ReactionRepository.delete(invalidReaction.resource, 'a@a');
                 } catch (err) {
                     hasThrown = true;
                     expect(err).to.exist;
@@ -223,37 +239,45 @@ describe('Reaction Repository', function () {
     describe('#getOne()', function () {
 
         context('When data is valid', function () {
-            let document: IReaction;
+            let createdReaction: IReaction;
 
             beforeEach(async function () {
-                document = await ReactionRepository.create(reaction);
+                createdReaction = await ReactionRepository.create(reaction);
             });
 
             it('Should return document by id', async function () {
-                const doc = await ReactionRepository.getOne({ _id: document.id } as Partial<IReaction>);
-                expect(doc).to.exist;
+                const returnedReaction = await ReactionRepository.getOne({
+                    resource: reaction.resource,
+                    user: reaction.user,
+                } as Partial<IReaction>);
+
+                expect(returnedReaction).to.exist;
+
                 for (const prop in reaction) {
-                    expect(doc).to.have.property(prop, reaction[prop as keyof IReaction]);
+                    expect(returnedReaction).to.have.property(prop, reaction[prop as keyof IReaction]);
                 }
             });
 
-            it('Should return document by property', async function () {
-                const doc = await ReactionRepository.getOne(reactionFilter);
-                expect(doc).to.exist;
-                expect(doc).to.have.property('id', document.id);
+            it('Should return document by reactionType', async function () {
+                const createdReaction = await ReactionRepository.getOne({
+                    type: reaction.type,
+                } as Partial<IReaction>);
+
+                expect(createdReaction).to.exist;
+
                 for (const prop in reaction) {
-                    expect(doc).to.have.property(prop, reaction[prop as keyof IReaction]);
+                    expect(createdReaction).to.have.property(prop, reaction[prop as keyof IReaction]);
                 }
             });
 
-            it('Should return null when document not exists', async function () {
-                const doc = await ReactionRepository.getOne(unexistingReaction);
-                expect(doc).to.not.exist;
+            it('Should return null when document does not exist', async function () {
+                const returnedReaction = await ReactionRepository.getOne(unexistingReaction);
+                expect(returnedReaction).to.not.exist;
             });
         });
 
         context('When data is invalid', function () {
-            it('Should throw error when filter not exists', async function () {
+            it('Should throw error when filter does not exist', async function () {
                 let hasThrown = false;
 
                 try {
@@ -283,16 +307,16 @@ describe('Reaction Repository', function () {
             });
 
             it('Should return all documents when filter is empty', async function () {
-                const documents = await ReactionRepository.getMany({});
-                expect(documents).to.exist;
-                expect(documents).to.be.an('array');
-                expect(documents).to.have.lengthOf(reactionArr.length);
+                const returnedReactions = await ReactionRepository.getMany({});
+                expect(returnedReactions).to.exist;
+                expect(returnedReactions).to.be.an('array');
+                expect(returnedReactions).to.have.lengthOf(reactionArr.length);
             });
 
             it('Should return only matching documents', async function () {
-                const documents = await ReactionRepository.getMany(reactionFilter);
-                expect(documents).to.exist;
-                expect(documents).to.be.an('array');
+                const returnedReactions = await ReactionRepository.getMany(reactionFilter);
+                expect(returnedReactions).to.exist;
+                expect(returnedReactions).to.be.an('array');
 
                 const amountOfRequiredDocuments = reactionArr.filter((item: IReaction) => {
                     let match = true;
@@ -303,14 +327,14 @@ describe('Reaction Repository', function () {
                     return match;
                 }).length;
 
-                expect(documents).to.have.lengthOf(amountOfRequiredDocuments);
+                expect(returnedReactions).to.have.lengthOf(amountOfRequiredDocuments);
             });
 
-            it('Should return empty array when critiria not matching any document', async function () {
-                const documents = await ReactionRepository.getMany(unexistingReaction);
-                expect(documents).to.exist;
-                expect(documents).to.be.an('array');
-                expect(documents).to.have.lengthOf(0);
+            it('Should return empty array when critiria does not match any document', async function () {
+                const returnedReactions = await ReactionRepository.getMany(unexistingReaction);
+                expect(returnedReactions).to.exist;
+                expect(returnedReactions).to.be.an('array');
+                expect(returnedReactions).to.have.lengthOf(0);
             });
         });
 
@@ -329,7 +353,7 @@ describe('Reaction Repository', function () {
                 }
             });
 
-            it('Should return null when filter is not in correct format', async function () {
+            it('Should return empty array when filter is not in correct format', async function () {
                 const documents = await ReactionRepository.getMany(unknownProperty);
                 expect(documents).to.exist;
                 expect(documents).to.be.an('array');
