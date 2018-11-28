@@ -7,7 +7,7 @@ import { UpdateWriteOpResult } from 'mongodb';
 type UpdateResponse = UpdateWriteOpResult['result'];
 export class ReactionController {
     static async create(req: Request, res: Response) {
-        res.json(await ReactionManager.create(req.body.reaction));
+        res.json(await ReactionManager.create(req.body));
     }
 
     static async update(req: Request, res: Response) {
