@@ -24,11 +24,13 @@ export class ReactionRepository {
             .exec();
     }
 
-    static delete(resource: string, user: string): Promise<IReaction & Document> {
-        return ReactionModel.deleteOne({
+    static async delete(resource: string, user: string): Promise<boolean> {
+        const response: { n: Number, ok: Number } = await ReactionModel.deleteOne({
             resource,
             user,
         }).exec();
+
+        return Promise.resolve(response.n === 1 && response.ok === 1);
     }
 
     static getOne(reactionFilter: Partial<IReaction>)
