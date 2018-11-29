@@ -1,67 +1,107 @@
-/*
 import * as request from 'supertest';
 import { expect } from 'chai';
 import * as mongoose from 'mongoose';
 
-import { IReaction } from './reaction.interface';
+import { IReaction, ReactionType, ResourceType } from './reaction.interface';
 import { Server } from '../server';
-import { PropertyInvalidError, IdInvalidError, ReactionNotFoundError } from '../utils/errors/userErrors';
+
+import {
+    ReactionNotFoundError,
+    UserInvalidError,
+    ResourceTypeInvalidError,
+    ReactionTypeInvalidError,
+    ResourceInvalidError,
+} from '../utils/errors/userErrors';
+
 import { config } from '../config';
 import { ReactionManager } from './reaction.manager';
 import { sign } from 'jsonwebtoken';
+import { ReactionRepository } from './reaction.repository';
 
 describe('Reaction Module', function () {
     let server: Server;
-    const validProppertyString: string = '12345';
-    const reaction: IReaction = {
-        property: validProppertyString,
-    };
+
     const authorizationHeader = `Bearer ${sign('mock-user', config.authentication.secret)}`;
-    const invalidId: string = '1';
-    const invalidProppertyString: string = '123456789123456789';
-    const invalidReaction: IReaction = {
-        property: invalidProppertyString,
+
+    const reaction: IReaction = {
+        resource: '5bf54919902f5a46a0fb2e73',
+        resourceType: ResourceType.Video,
+        type: ReactionType.Like,
+        user: 'a@a',
     };
-    
 
     const reaction2: IReaction = {
-        property: '45678',
-    };
-    const reaction3: IReaction = {
-        property: '6789',
-    };
-
-    const unexistingReaction: IReaction = {
-        property: 'a',
+        resource: '5bf54919902f5a46a0fb2e73',
+        resourceType: ResourceType.Video,
+        type: ReactionType.Dislike,
+        user: 'a@b',
     };
 
-    const reactions: IReaction[] =
-        [reaction, reaction2, reaction3, reaction3];
+    const reactionArr: IReaction[] = [reaction, reaction2];
+    const invalidReaction: any = {
+        resource: '12',
+        resourceType: 'Da',
+        type: 'Niet',
+        user: 'ab',
+    };
 
-    const invalidReactions: IReaction[] =
-        [reaction, invalidReaction, reaction3];
+    const invalidResourceReaction: any = {
+        resource: '2',
+        resourceType: ResourceType.Video,
+        type: ReactionType.Like,
+        user: 'a@a',
+    };
+
+    const invalidResourceTypeReaction: any = {
+        resource: '5bf54919902f5a46a0fb2e73',
+        resourceType: 'not a real resource type',
+        type: ReactionType.Like,
+        user: 'a@a',
+    };
+
+    const invalidTypeReaction: any = {
+        resource: '5bf54919902f5a46a0fb2e73',
+        resourceType: ResourceType.Video,
+        type: 'Not a real type',
+        user: 'a@a',
+    };
+
+    const invalidUserReaction: any = {
+        resource: '5bf54919902f5a46a0fb2e73',
+        resourceType: ResourceType.Video,
+        type: ReactionType.Like,
+        user: 'a',
+    };
+
+    const reactionFilter: Partial<IReaction> = {
+        resourceType: ResourceType.Video,
+    };
+
+    const reactionDataToUpdate: Partial<IReaction> = { type: ReactionType.Dislike };
+    const unexistingReaction: Partial<IReaction> = {
+        resource: '5bf54919902f5a46a0fb2e33',
+    };
+    const unknownProperty: Object = { unknownProperty: true };
 
     before(async function () {
-        
+
         await mongoose.connect(`mongodb://${config.db.host}:${config.db.port}/${config.db.name}`, { useNewUrlParser: true });
         server = Server.bootstrap();
     });
 
-    
     after(async function () {
         await mongoose.connection.db.dropDatabase();
     });
     describe('#POST /api/reaction/', function () {
         context('When request is valid', function () {
-            
+
             beforeEach(async function () {
                 await mongoose.connection.db.dropDatabase();
             });
             it('Should return created reaction', function (done: MochaDone) {
                 request(server.app)
                     .post('/api/reaction/')
-                    .send({ reaction })
-                    
+                    .send(reaction)
                     .set({ authorization: authorizationHeader })
                     .expect(200)
                     .expect('Content-Type', /json/)
@@ -71,7 +111,7 @@ describe('Reaction Module', function () {
                         expect(res.status).to.equal(200);
                         expect(res).to.have.property('body');
                         expect(res.body).to.be.an('object');
-                        expect(res.body).to.have.property('property', validProppertyString);
+                        expect(res.body).to.have.property('resource', reaction.resource);
 
                         done();
                     });
@@ -79,15 +119,14 @@ describe('Reaction Module', function () {
         });
 
         context('When request is invalid', function () {
-            
+
             beforeEach(async function () {
                 await mongoose.connection.db.dropDatabase();
             });
-            it('Should return error status when property is invalid', function (done: MochaDone) {
+            it('Should return error status when resourceType is invalid', function (done: MochaDone) {
                 request(server.app)
                     .post('/api/reaction/')
-                    .send({ reaction: invalidReaction })
-                    
+                    .send(invalidResourceTypeReaction)
                     .set({ authorization: authorizationHeader })
                     .expect(400)
                     .expect('Content-Type', /json/)
@@ -96,62 +135,8 @@ describe('Reaction Module', function () {
                         expect(res.status).to.equal(400);
                         expect(res).to.have.property('body');
                         expect(res.body).to.be.an('object');
-                        expect(res.body).to.have.property('type', PropertyInvalidError.name);
-                        expect(res.body).to.have.property('message', new PropertyInvalidError().message);
-
-                        done();
-                    });
-            });
-        });
-    });
-    
-    describe('#POST /api/reaction/many/', function () {
-        context('When request is valid', function () {
-            beforeEach(async function () {
-                await mongoose.connection.db.dropDatabase();
-            });
-
-            it('Should return created reaction', function (done: MochaDone) {
-                request(server.app)
-                    .post('/api/reaction/many/')
-                    .send({ reactions })
-                    
-                    .set({ authorization: authorizationHeader })
-                    .expect(200)
-                    .expect('Content-Type', /json/)
-                    .end((error: Error, res: request.Response) => {
-                        expect(error).to.not.exist;
-                        expect(res).to.exist;
-                        expect(res.status).to.equal(200);
-                        expect(res).to.have.property('body');
-                        expect(res.body).to.be.an('array');
-                        expect(res.body[1]).to.have.property('property', reactions[1].property);
-
-                        done();
-                    });
-            });
-        });
-
-        context('When request is invalid', function () {
-            beforeEach(async function () {
-                await mongoose.connection.db.dropDatabase();
-            });
-
-            it('Should return error status when property is invalid', function (done: MochaDone) {
-                request(server.app)
-                    .post('/api/reaction/many/')
-                    .send({ reactions: invalidReactions })
-                    
-                    .set({ authorization: authorizationHeader })
-                    .expect(400)
-                    .expect('Content-Type', /json/)
-                    .end((error: Error, res: request.Response) => {
-                        expect(error).to.not.exist;
-                        expect(res.status).to.equal(400);
-                        expect(res).to.have.property('body');
-                        expect(res.body).to.be.an('object');
-                        expect(res.body).to.have.property('type', PropertyInvalidError.name);
-                        expect(res.body).to.have.property('message', new PropertyInvalidError().message);
+                        expect(res.body).to.have.property('type', ResourceTypeInvalidError.name);
+                        expect(res.body).to.have.property('message', new ResourceTypeInvalidError().message);
 
                         done();
                     });
@@ -159,85 +144,7 @@ describe('Reaction Module', function () {
         });
     });
 
-    describe('#PUT /api/reaction/many', function () {
-        let returnedReactions: any;
-
-        context('When request is valid', function () {
-            beforeEach(async function () {
-                await mongoose.connection.db.dropDatabase();
-                returnedReactions = await ReactionManager.createMany(reactions);
-            });
-
-            it('Should return updated reaction', function (done: MochaDone) {
-                request(server.app)
-                    .put(`/api/reaction/many`)
-                    .send({ reaction: reaction2, reactionFilter: reaction })
-                    
-                    .set({ authorization: authorizationHeader })
-                    .expect(200)
-                    .expect('Content-Type', /json/)
-                    .end((error: Error, res: request.Response) => {
-                        expect(error).to.not.exist;
-                        expect(res).to.exist;
-                        expect(res.status).to.equal(200);
-                        expect(res).to.have.property('body');
-                        expect(res.body).to.be.an('object');
-                        expect(res.body).to.have.property('ok', 1);
-                        expect(res.body).to.have.property('nModified', 1);
-
-                        done();
-                    });
-            });
-
-            it('Should return 404 error status code', function (done: MochaDone) {
-                request(server.app)
-                    .put(`/api/reaction/many`)
-                    .send({ reaction, reactionFilter: unexistingReaction })
-                    
-                    .set({ authorization: authorizationHeader })
-                    .expect(404)
-                    .end((error: Error, res: request.Response) => {
-                        expect(res).to.exist;
-                        expect(res.status).to.equal(404);
-                        expect(res).to.have.property('body');
-                        expect(res.body).to.be.an('object');
-                        expect(res.body).to.have.property('type', ReactionNotFoundError.name);
-                        expect(res.body).to.have.property('message', new ReactionNotFoundError().message);
-
-                        done();
-                    });
-            });
-        });
-
-        context('When request is invalid', function () {
-            beforeEach(async function () {
-                await mongoose.connection.db.dropDatabase();
-                returnedReactions = await ReactionManager.createMany(reactions);
-            });
-
-            it('Should return error status when property is invalid', function (done: MochaDone) {
-                request(server.app)
-                    .put(`/api/reaction/many`)
-                    .send({ reaction: invalidReaction, reactionFilter: reaction2 })
-                    
-                    .set({ authorization: authorizationHeader })
-                    .expect(400)
-                    .expect('Content-Type', /json/)
-                    .end((error: Error, res: request.Response) => {
-                        expect(error).to.not.exist;
-                        expect(res.status).to.equal(400);
-                        expect(res).to.have.property('body');
-                        expect(res.body).to.be.an('object');
-                        expect(res.body).to.have.property('type', PropertyInvalidError.name);
-                        expect(res.body).to.have.property('message', new PropertyInvalidError().message);
-
-                        done();
-                    });
-            });
-        });
-    });
-
-    describe('#PUT /api/reaction/:id', function () {
+    describe('#PUT /api/reaction/', function () {
         let returnedReaction: any;
 
         context('When request is valid', function () {
@@ -248,10 +155,10 @@ describe('Reaction Module', function () {
 
             it('Should return updated reaction', function (done: MochaDone) {
                 request(server.app)
-                    .put(`/api/reaction/${returnedReaction.id}`)
-                    .send({ reaction })
-                    
+                    .put('/api/reaction/')
+                    .send({ type: reactionDataToUpdate.type })
                     .set({ authorization: authorizationHeader })
+                    .query({ resource: reaction.resource, user: reaction.user })
                     .expect(200)
                     .expect('Content-Type', /json/)
                     .end((error: Error, res: request.Response) => {
@@ -260,18 +167,18 @@ describe('Reaction Module', function () {
                         expect(res.status).to.equal(200);
                         expect(res).to.have.property('body');
                         expect(res.body).to.be.an('object');
-                        expect(res.body).to.have.property('property', reaction.property);
+                        expect(res.body).to.have.property('type', reactionDataToUpdate.type);
 
                         done();
                     });
             });
 
-            it('Should return error status when id is not found', function (done: MochaDone) {
+            it('Should return error status when reaction is not found', function (done: MochaDone) {
                 request(server.app)
-                    .put(`/api/reaction/${new mongoose.Types.ObjectId()}`)
-                    .send({ reaction })
-                    
+                    .put('/api/reaction/')
+                    .send({ type: reactionDataToUpdate.type })
                     .set({ authorization: authorizationHeader })
+                    .query({ resource: unexistingReaction.resource, user: reaction.user })
                     .expect(404)
                     .expect('Content-Type', /json/)
                     .end((error: Error, res: request.Response) => {
@@ -293,12 +200,12 @@ describe('Reaction Module', function () {
                 returnedReaction = await ReactionManager.create(reaction);
             });
 
-            it('Should return error status when id is invalid', function (done: MochaDone) {
+            it('Should return error status when reaction type is invalid', function (done: MochaDone) {
                 request(server.app)
-                    .put(`/api/reaction/2`)
-                    .send({ reaction })
-                    
+                    .put('/api/reaction/')
+                    .send({ type: invalidTypeReaction.type })
                     .set({ authorization: authorizationHeader })
+                    .query({ resource: reaction.resource, user: reaction.user })
                     .expect(400)
                     .expect('Content-Type', /json/)
                     .end((error: Error, res: request.Response) => {
@@ -306,28 +213,8 @@ describe('Reaction Module', function () {
                         expect(res.status).to.equal(400);
                         expect(res).to.have.property('body');
                         expect(res.body).to.be.an('object');
-                        expect(res.body).to.have.property('type', IdInvalidError.name);
-                        expect(res.body).to.have.property('message', new IdInvalidError().message);
-
-                        done();
-                    });
-            });
-
-            it('Should return error status when property is invalid', function (done: MochaDone) {
-                request(server.app)
-                    .put(`/api/reaction/${returnedReaction.id}`)
-                    .send({ reaction: invalidReaction })
-                    
-                    .set({ authorization: authorizationHeader })
-                    .expect(400)
-                    .expect('Content-Type', /json/)
-                    .end((error: Error, res: request.Response) => {
-                        expect(error).to.not.exist;
-                        expect(res.status).to.equal(400);
-                        expect(res).to.have.property('body');
-                        expect(res.body).to.be.an('object');
-                        expect(res.body).to.have.property('type', PropertyInvalidError.name);
-                        expect(res.body).to.have.property('message', new PropertyInvalidError().message);
+                        expect(res.body).to.have.property('type', ReactionTypeInvalidError.name);
+                        expect(res.body).to.have.property('message', new ReactionTypeInvalidError().message);
 
                         done();
                     });
@@ -335,7 +222,7 @@ describe('Reaction Module', function () {
         });
     });
 
-    describe('#DELETE /api/reaction/:id', function () {
+    describe('#DELETE /api/reaction/', function () {
         let returnedReaction: any;
 
         context('When request is valid', function () {
@@ -344,11 +231,11 @@ describe('Reaction Module', function () {
                 returnedReaction = await ReactionManager.create(reaction);
             });
 
-            it('Should return updated reaction', function (done: MochaDone) {
+            it('Should return true', function (done: MochaDone) {
                 request(server.app)
-                    .delete(`/api/reaction/${returnedReaction.id}`)
-                    
+                    .delete('/api/reaction/')
                     .set({ authorization: authorizationHeader })
+                    .send({ resource: reaction.resource, user: reaction.user })
                     .expect(200)
                     .expect('Content-Type', /json/)
                     .end((error: Error, res: request.Response) => {
@@ -356,18 +243,17 @@ describe('Reaction Module', function () {
                         expect(res).to.exist;
                         expect(res.status).to.equal(200);
                         expect(res).to.have.property('body');
-                        expect(res.body).to.be.an('object');
-                        expect(res.body).to.have.property('property', reaction.property);
+                        expect(res.body).to.be.true;
 
                         done();
                     });
             });
 
-            it('Should return error status when id not found', function (done: MochaDone) {
+            it('Should return error status when resource not found', function (done: MochaDone) {
                 request(server.app)
-                    .delete(`/api/reaction/${new mongoose.Types.ObjectId()}`)
-                    
+                    .delete('/api/reaction/')
                     .set({ authorization: authorizationHeader })
+                    .send({ resource: unexistingReaction.resource, user: reaction.user })
                     .expect(404)
                     .expect('Content-Type', /json/)
                     .end((error: Error, res: request.Response) => {
@@ -389,11 +275,11 @@ describe('Reaction Module', function () {
                 returnedReaction = await ReactionManager.create(reaction);
             });
 
-            it('Should return error status when id is invalid', function (done: MochaDone) {
+            it('Should return error status when user is invalid', function (done: MochaDone) {
                 request(server.app)
-                    .delete(`/api/reaction/${invalidId}`)
-                    
+                    .delete('/api/reaction/')
                     .set({ authorization: authorizationHeader })
+                    .send({ resource: reaction.resource, user: invalidUserReaction.user })
                     .expect(400)
                     .expect('Content-Type', /json/)
                     .end((error: Error, res: request.Response) => {
@@ -401,8 +287,8 @@ describe('Reaction Module', function () {
                         expect(res.status).to.equal(400);
                         expect(res).to.have.property('body');
                         expect(res.body).to.be.an('object');
-                        expect(res.body).to.have.property('type', IdInvalidError.name);
-                        expect(res.body).to.have.property('message', new IdInvalidError().message);
+                        expect(res.body).to.have.property('type', UserInvalidError.name);
+                        expect(res.body).to.have.property('message', new UserInvalidError().message);
 
                         done();
                     });
@@ -416,13 +302,13 @@ describe('Reaction Module', function () {
         context('When request is valid', function () {
             beforeEach(async function () {
                 await mongoose.connection.db.dropDatabase();
-                returnedReactions = await ReactionManager.createMany(reactions);
+                returnedReactions = await ReactionRepository.createMany(reactionArr);
             });
 
             it('Should return reaction', function (done: MochaDone) {
                 request(server.app)
-                    .get(`/api/reaction/one?property=${reaction3.property}`)
-                    
+                    .get('/api/reaction/one')
+                    .query(reaction2)
                     .set({ authorization: authorizationHeader })
                     .expect(200)
                     .expect('Content-Type', /json/)
@@ -432,7 +318,7 @@ describe('Reaction Module', function () {
                         expect(res.status).to.equal(200);
                         expect(res).to.have.property('body');
                         expect(res.body).to.be.an('object');
-                        expect(res.body).to.have.property('property', reactions[2].property);
+                        expect(res.body).to.have.property('resource', reactionArr[1].resource);
 
                         done();
                     });
@@ -440,8 +326,8 @@ describe('Reaction Module', function () {
 
             it('Should return error when reaction not found', function (done: MochaDone) {
                 request(server.app)
-                    .get(`/api/reaction/one?property=${unexistingReaction.property}`)
-                    
+                    .get('/api/reaction/one')
+                    .query(unexistingReaction)
                     .set({ authorization: authorizationHeader })
                     .expect(404)
                     .expect('Content-Type', /json/)
@@ -465,13 +351,13 @@ describe('Reaction Module', function () {
         context('When request is valid', function () {
             beforeEach(async function () {
                 await mongoose.connection.db.dropDatabase();
-                returnedReactions = await ReactionManager.createMany(reactions);
+                returnedReactions = await ReactionRepository.createMany(reactionArr);
             });
 
             it('Should return reaction', function (done: MochaDone) {
                 request(server.app)
-                    .get(`/api/reaction/many?property=${reaction3.property}`)
-                    
+                    .get('/api/reaction/many')
+                    .query(reactionFilter)
                     .set({ authorization: authorizationHeader })
                     .expect(200)
                     .expect('Content-Type', /json/)
@@ -481,116 +367,11 @@ describe('Reaction Module', function () {
                         expect(res.status).to.equal(200);
                         expect(res).to.have.property('body');
                         expect(res.body).to.be.an('array');
-                        expect(res.body[1]).to.have.property('property', reactions[2].property);
+                        expect(res.body[1]).to.have.property('type', reactionArr[1].type);
 
                         done();
                     });
             });
         });
     });
-
-    describe('#GET /api/reaction/amount', function () {
-        let returnedReactions: any;
-
-        context('When request is valid', function () {
-            beforeEach(async function () {
-                await mongoose.connection.db.dropDatabase();
-                returnedReactions = await ReactionManager.createMany(reactions);
-            });
-
-            it('Should return reaction', function (done: MochaDone) {
-                request(server.app)
-                    .get(`/api/reaction/amount?property=${reaction3.property}`)
-                    
-                    .set({ authorization: authorizationHeader })
-                    .expect(200)
-                    .expect('Content-Type', /json/)
-                    .end((error: Error, res: request.Response) => {
-                        expect(error).to.not.exist;
-                        expect(res).to.exist;
-                        expect(res.status).to.equal(200);
-                        expect(res).to.have.property('body');
-                        expect(res.body).be.equal(2);
-
-                        done();
-                    });
-            });
-        });
-    });
-
-    describe('#GET /api/reaction/:id', function () {
-        let returnedReaction: any;
-
-        context('When request is valid', function () {
-            beforeEach(async function () {
-                await mongoose.connection.db.dropDatabase();
-                returnedReaction = await ReactionManager.create(reaction);
-            });
-
-            it('Should return reaction', function (done: MochaDone) {
-                request(server.app)
-                    .get(`/api/reaction/${returnedReaction.id}`)
-                    
-                    .set({ authorization: authorizationHeader })
-                    .expect(200)
-                    .expect('Content-Type', /json/)
-                    .end((error: Error, res: request.Response) => {
-                        expect(error).to.not.exist;
-                        expect(res).to.exist;
-                        expect(res.status).to.equal(200);
-                        expect(res).to.have.property('body');
-                        expect(res.body).to.be.an('object');
-                        expect(res.body).to.have.property('property', reaction.property);
-
-                        done();
-                    });
-            });
-
-            it('Should return error when reaction not found', function (done: MochaDone) {
-                request(server.app)
-                    .get(`/api/reaction/${new mongoose.Types.ObjectId()}`)
-                    
-                    .set({ authorization: authorizationHeader })
-                    .expect(404)
-                    .expect('Content-Type', /json/)
-                    .end((error: Error, res: request.Response) => {
-                        expect(res).to.exist;
-                        expect(res.status).to.equal(404);
-                        expect(res).to.have.property('body');
-                        expect(res.body).to.be.an('object');
-                        expect(res.body).to.have.property('type', ReactionNotFoundError.name);
-                        expect(res.body).to.have.property('message', new ReactionNotFoundError().message);
-
-                        done();
-                    });
-            });
-        });
-
-        context('When request is invalid', function () {
-            beforeEach(async function () {
-                await mongoose.connection.db.dropDatabase();
-                returnedReaction = await ReactionManager.create(reaction);
-            });
-
-            it('Should return error status when id is invalid', function (done: MochaDone) {
-                request(server.app)
-                    .get(`/api/reaction/${invalidId}`)
-                    
-                    .set({ authorization: authorizationHeader })
-                    .expect(400)
-                    .expect('Content-Type', /json/)
-                    .end((error: Error, res: request.Response) => {
-                        expect(error).to.not.exist;
-                        expect(res.status).to.equal(400);
-                        expect(res).to.have.property('body');
-                        expect(res.body).to.be.an('object');
-                        expect(res.body).to.have.property('type', IdInvalidError.name);
-                        expect(res.body).to.have.property('message', new IdInvalidError().message);
-
-                        done();
-                    });
-            });
-        });
-    });
-    });
-*/
+});
