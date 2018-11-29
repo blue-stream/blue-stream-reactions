@@ -28,6 +28,34 @@ const invalidReaction: any = {
     user: 'ab',
 };
 
+const invalidResourceReaction: any = {
+    resource: '2',
+    resourceType: ResourceType.Video,
+    type: ReactionType.Like,
+    user: 'a@a',
+};
+
+const invalidResourceTypeReaction: any = {
+    resource: '5bf54919902f5a46a0fb2e73',
+    resourceType: 'not a real resource type',
+    type: ReactionType.Like,
+    user: 'a@a',
+};
+
+const invalidTypeReaction: any = {
+    resource: '5bf54919902f5a46a0fb2e73',
+    resourceType: ResourceType.Video,
+    type: 'Not a real type',
+    user: 'a@a',
+};
+
+const invalidUserReaction: any = {
+    resource: '5bf54919902f5a46a0fb2e73',
+    resourceType: ResourceType.Video,
+    type: ReactionType.Like,
+    user: 'a',
+};
+
 const reactionFilter: Partial<IReaction> = {
     type: ReactionType.Like,
     resourceType: ResourceType.Video,
@@ -71,9 +99,7 @@ describe('Reaction Repository', function () {
                 let hasThrown = false;
 
                 try {
-                    const invalidReaction = reaction;
-                    invalidReaction.user = 'aa';
-                    await ReactionRepository.create(invalidReaction);
+                    await ReactionRepository.create(invalidUserReaction);
                 } catch (err) {
                     hasThrown = true;
                     expect(err).to.exist;
@@ -87,6 +113,45 @@ describe('Reaction Repository', function () {
                     expect(hasThrown).to.be.true;
                 }
             });
+
+            it('Should throw validation error when given incorrect resourceType', async function () {
+                let hasThrown = false;
+
+                try {
+                    await ReactionRepository.create(invalidResourceTypeReaction);
+                } catch (err) {
+                    hasThrown = true;
+                    expect(err).to.exist;
+                    expect(err).to.have.property('name', 'ValidationError');
+                    expect(err).to.have.property('message').that.matches(/Reaction validation failed: resourceType/i);
+                    expect(err).to.have.property('errors');
+                    expect(err.errors).to.have.property('resourceType');
+                    expect(err.errors.resourceType).to.have.property('name', 'ValidatorError');
+
+                } finally {
+                    expect(hasThrown).to.be.true;
+                }
+            });
+
+            it('Should throw validation error when given incorrect type', async function () {
+                let hasThrown = false;
+
+                try {
+                    await ReactionRepository.create(invalidTypeReaction);
+                } catch (err) {
+                    hasThrown = true;
+                    expect(err).to.exist;
+                    expect(err).to.have.property('name', 'ValidationError');
+                    expect(err).to.have.property('message').that.matches(/Reaction validation failed: type/i);
+                    expect(err).to.have.property('errors');
+                    expect(err.errors).to.have.property('type');
+                    expect(err.errors.type).to.have.property('name', 'ValidatorError');
+
+                } finally {
+                    expect(hasThrown).to.be.true;
+                }
+            });
+
 
             it('Should throw validation error when empty reaction passed', async function () {
                 let hasThrown = false;
@@ -162,12 +227,6 @@ describe('Reaction Repository', function () {
                 expect(updatedDoc).to.have.property('type', reactionDataToUpdate.type);
             });
 
-            it('Should not update an existing reaction when empty data provided', async function () {
-                const updatedDoc = await ReactionRepository.update(createdReaction.resource, createdReaction.user, undefined!);
-                expect(updatedDoc).to.exist;
-                expect(updatedDoc).to.have.property('type', reaction.type);
-            });
-
             it('Should return null when updated doc does not exists', async function () {
                 const updatedDoc = await ReactionRepository.update(new mongoose.Types.ObjectId().toHexString(), 'a@b', reactionDataToUpdate.type!);
                 expect(updatedDoc).to.not.exist;
@@ -180,6 +239,21 @@ describe('Reaction Repository', function () {
 
                 try {
                     await ReactionRepository.update(createdReaction.resource, createdReaction.user, invalidReaction.type);
+                } catch (err) {
+                    hasThrown = true;
+                    expect(err).to.exist;
+                    expect(err).to.have.property('name', 'ValidationError');
+                    expect(err).to.have.property('message').that.matches(/Validation failed.+for path/i);
+                } finally {
+                    expect(hasThrown).to.be.true;
+                }
+            });
+
+            it('Should throw error when when empty data provided', async function () {
+                let hasThrown = false;
+
+                try {
+                    await ReactionRepository.update(createdReaction.resource, createdReaction.user, undefined!);
                 } catch (err) {
                     hasThrown = true;
                     expect(err).to.exist;
@@ -202,36 +276,26 @@ describe('Reaction Repository', function () {
 
         context('When data is valid', function () {
 
-            it('Should delete document by resource & user', async function () {
+            it('Should delete document by resource & user and return true', async function () {
                 const deleted = await ReactionRepository.delete(createdReaction.resource, createdReaction.user);
                 expect(deleted).to.exist;
-                expect(deleted).to.have.property('resource', createdReaction.resource);
+                expect(deleted).to.be.true;
 
                 const getDeleted = await ReactionRepository.getOne(reaction);
                 expect(getDeleted).to.not.exist;
             });
 
-            it('Should return null when document not exists', async function () {
+            it('Should return false when document does not exist', async function () {
                 const deleted = await ReactionRepository.delete(new mongoose.Types.ObjectId().toHexString(), 'a@v');
-                expect(deleted).to.not.exist;
+                expect(deleted).to.be.false;
             });
         });
 
         context('When data is invalid', function () {
             it('Should throw error when resource is not in the correct format', async function () {
-                let hasThrown = false;
-
-                try {
-                    await ReactionRepository.delete(invalidReaction.resource, 'a@a');
-                } catch (err) {
-                    hasThrown = true;
-                    expect(err).to.exist;
-                    expect(err).to.have.property('name', 'CastError');
-                    expect(err).to.have.property('kind', 'ObjectId');
-                    expect(err).to.have.property('path', '_id');
-                } finally {
-                    expect(hasThrown).to.be.true;
-                }
+                const deleted = await ReactionRepository.delete(invalidReaction.resource, 'a@a');
+                expect(deleted).to.exist;
+                expect(deleted).to.be.false;
             });
         });
     });
