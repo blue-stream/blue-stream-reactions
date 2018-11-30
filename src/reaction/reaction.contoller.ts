@@ -48,6 +48,6 @@ export class ReactionController {
     }
 
     static async getAllTypesAmountsOfResource(req: Request, res: Response) {
-        res.json(await ReactionManager.getAllTypesAmountsOfResource(req.query.resource));
+        res.json(await ReactionManager.getAllTypesAmountsOfResource(req.params.resource));
     }
 }
