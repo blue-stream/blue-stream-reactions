@@ -23,15 +23,16 @@ describe('Reaction Module', function () {
 
     const authorizationHeader = `Bearer ${sign('mock-user', config.authentication.secret)}`;
 
+    const existingResource: string = '5bf54919902f5a46a0fb2e73';
     const reaction: IReaction = {
-        resource: '5bf54919902f5a46a0fb2e73',
+        resource: existingResource,
         resourceType: ResourceType.Video,
         type: ReactionType.Like,
         user: 'a@a',
     };
 
     const reaction2: IReaction = {
-        resource: '5bf54919902f5a46a0fb2e73',
+        resource: existingResource,
         resourceType: ResourceType.Video,
         type: ReactionType.Dislike,
         user: 'a@b',
@@ -92,6 +93,7 @@ describe('Reaction Module', function () {
     after(async function () {
         await mongoose.connection.db.dropDatabase();
     });
+
     describe('#POST /api/reaction/', function () {
         context('When request is valid', function () {
 
@@ -368,6 +370,86 @@ describe('Reaction Module', function () {
                         expect(res).to.have.property('body');
                         expect(res.body).to.be.an('array');
                         expect(res.body[1]).to.have.property('type', reactionArr[1].type);
+
+                        done();
+                    });
+            });
+        });
+    });
+
+    describe('#GET /api/reaction/:resource/amounts', function () {
+        let returnedReactions: any;
+        const numberOfTypes: number = ((<any>Object).values(ResourceType)).length;
+
+        context('When request is valid', function () {
+            beforeEach(async function () {
+                await mongoose.connection.db.dropDatabase();
+                returnedReactions = await ReactionRepository.createMany(reactionArr);
+            });
+
+            it('Should return amount of each reaction type', function (done: MochaDone) {
+                request(server.app)
+                    .get(`/api/reaction/${reaction.resource}/amounts`)
+                    .set({ authorization: authorizationHeader })
+                    .expect(200)
+                    .expect('Content-Type', /json/)
+                    .end((error: Error, res: request.Response) => {
+                        expect(error).to.not.exist;
+                        expect(res).to.exist;
+                        expect(res.status).to.equal(200);
+                        expect(res).to.have.property('body');
+                        expect(res.body).to.be.an('Array');
+                        expect(res.body).to.be.of.length(numberOfTypes);
+
+                        ((<any>Object).values(ReactionType)).forEach((reactionType: string, index: number) => {
+                            const amountOfType: number = reactionArr.reduce(
+                                (amount, currReaction) => {
+
+                                    if (currReaction.type.toString() === reactionType) {
+                                        return amount + 1;
+                                    }
+
+                                    return amount;
+                                },
+                                0);
+
+                            expect(res.body[index]).to.have.property('type', reactionType);
+                            expect(res.body[index]).to.have.property('amount', amountOfType);
+                        });
+
+                        done();
+                    });
+            });
+
+            it('Should return 0 for each reaction type when resource not found', function (done: MochaDone) {
+                request(server.app)
+                    .get(`/api/reaction/${unexistingReaction.resource}/amounts`)
+                    .set({ authorization: authorizationHeader })
+                    .expect(200)
+                    .expect('Content-Type', /json/)
+                    .end((error: Error, res: request.Response) => {
+                        expect(error).to.not.exist;
+                        expect(res).to.exist;
+                        expect(res.status).to.equal(200);
+                        expect(res).to.have.property('body');
+                        expect(res.body).to.be.an('Array');
+                        expect(res.body).to.be.of.length(numberOfTypes);
+
+                        ((<any>Object).values(ReactionType)).forEach((reactionType: string, index: number) => {
+                            const amountOfType: number = reactionArr.reduce(
+                                (amount, currReaction) => {
+
+                                    if (currReaction.type.toString() === reactionType) {
+                                        return amount + 1;
+                                    }
+
+                                    return amount;
+                                },
+                                0);
+
+                            expect(res.body[index]).to.have.property('type', reactionType);
+                            expect(res.body[index]).to.have.property('amount', 0);
+                        });
 
                         done();
                     });

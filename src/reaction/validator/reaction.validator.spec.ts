@@ -136,4 +136,14 @@ describe('Reaction Validator Middleware', function () {
             });
         });
     });
+
+    describe('canGetAllTypesAmountsOfResource Validator', function () {
+        context('When valid arguments are passed', function () {
+            it('Should not throw an error', function () {
+                ReactionValidator.canGetAllTypesAmountsOfResource(new ValidRequestMocks().getAllTypesAmountsOfResource, responseMock, (error: Error) => {
+                    expect(error).to.not.exist;
+                });
+            });
+        });
+    });
 });
