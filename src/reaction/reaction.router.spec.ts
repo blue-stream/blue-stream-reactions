@@ -456,4 +456,42 @@ describe('Reaction Module', function () {
             });
         });
     });
+
+    describe('#GET /api/reaction/amount', function () {
+        let returnedReactions: any;
+
+        context('When request is valid', function () {
+            beforeEach(async function () {
+                await mongoose.connection.db.dropDatabase();
+                returnedReactions = await ReactionRepository.createMany(reactionArr);
+            });
+
+            it('Should return reaction', function (done: MochaDone) {
+                const neededAmount = reactionArr.filter((currentReaction: IReaction) => {
+                    let match = true;
+                    for (const prop in reactionFilter) {
+                        match = match && currentReaction[prop as keyof IReaction] === reactionFilter[prop as keyof IReaction];
+                    }
+
+                    return match;
+                }).length;
+
+                request(server.app)
+                    .get('/api/reaction/amount')
+                    .query(reactionFilter)
+                    .set({ authorization: authorizationHeader })
+                    .expect(200)
+                    .expect('Content-Type', /json/)
+                    .end((error: Error, res: request.Response) => {
+                        expect(error).to.not.exist;
+                        expect(res).to.exist;
+                        expect(res.status).to.equal(200);
+                        expect(res).to.have.property('body');
+                        expect(res.body).to.be.equal(neededAmount);
+
+                        done();
+                    });
+            });
+        });
+    });
 });
