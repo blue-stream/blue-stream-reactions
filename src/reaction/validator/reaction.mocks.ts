@@ -50,7 +50,7 @@ export class ValidRequestMocks {
         headers: {
             authorization: this.authorizationHeader,
         },
-        body: {
+        query: {
             resource: this.reaction.resource,
             user: this.reaction.user,
         },

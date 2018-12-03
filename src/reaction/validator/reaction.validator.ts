@@ -29,8 +29,8 @@ export class ReactionValidator {
 
     static canDelete(req: Request, res: Response, next: NextFunction) {
         next(
-            ReactionValidator.validateResource(req.body.resource) ||
-            ReactionValidator.validateUser(req.body.user),
+            ReactionValidator.validateResource(req.query.resource) ||
+            ReactionValidator.validateUser(req.query.user),
         );
     }
 

@@ -237,7 +237,7 @@ describe('Reaction Module', function () {
                 request(server.app)
                     .delete('/api/reaction/')
                     .set({ authorization: authorizationHeader })
-                    .send({ resource: reaction.resource, user: reaction.user })
+                    .query({ resource: reaction.resource, user: reaction.user })
                     .expect(200)
                     .expect('Content-Type', /json/)
                     .end((error: Error, res: request.Response) => {
@@ -255,7 +255,7 @@ describe('Reaction Module', function () {
                 request(server.app)
                     .delete('/api/reaction/')
                     .set({ authorization: authorizationHeader })
-                    .send({ resource: unexistingReaction.resource, user: reaction.user })
+                    .query({ resource: unexistingReaction.resource, user: reaction.user })
                     .expect(404)
                     .expect('Content-Type', /json/)
                     .end((error: Error, res: request.Response) => {
@@ -281,7 +281,7 @@ describe('Reaction Module', function () {
                 request(server.app)
                     .delete('/api/reaction/')
                     .set({ authorization: authorizationHeader })
-                    .send({ resource: reaction.resource, user: invalidUserReaction.user })
+                    .query({ resource: reaction.resource, user: invalidUserReaction.user })
                     .expect(400)
                     .expect('Content-Type', /json/)
                     .end((error: Error, res: request.Response) => {

@@ -87,7 +87,7 @@ describe('Reaction Validator Middleware', function () {
         context('When invalid arguments are passed', function () {
             it('Should throw an ResourceInvalidError When resource is undefined', function () {
                 const invalidRequestMock = new ValidRequestMocks().delete;
-                invalidRequestMock.body.resource = undefined;
+                invalidRequestMock.query.resource = undefined;
 
                 ReactionValidator.canDelete(invalidRequestMock, responseMock, (error: Error) => {
                     expect(error).to.exist;
@@ -97,7 +97,7 @@ describe('Reaction Validator Middleware', function () {
 
             it('Should throw an ResourceInvalidError When resource is null', function () {
                 const invalidRequestMock = new ValidRequestMocks().delete;
-                invalidRequestMock.body.resource = undefined;
+                invalidRequestMock.query.resource = undefined;
 
                 ReactionValidator.canDelete(invalidRequestMock, responseMock, (error: Error) => {
                     expect(error).to.exist;

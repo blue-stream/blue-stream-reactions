@@ -22,7 +22,7 @@ export class ReactionController {
 
     static async delete(req: Request, res: Response) {
         const deleted = await ReactionManager.delete(
-            req.body.resource, req.body.user);
+            req.query.resource, req.query.user);
         if (!deleted) {
             throw new ReactionNotFoundError();
         }
