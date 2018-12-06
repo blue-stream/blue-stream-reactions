@@ -152,7 +152,6 @@ describe('Reaction Repository', function () {
                 }
             });
 
-
             it('Should throw validation error when empty reaction passed', async function () {
                 let hasThrown = false;
 
