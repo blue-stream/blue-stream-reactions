@@ -19,9 +19,13 @@ export class ReactionBroker {
         );
     }
 
-    private static async deleteMany(data: { id: string }) {
-        if (data && data.id) {
-            await ReactionManager.deleteMany(data.id);
+    private static async deleteMany(data: { id?: string, ids?: string[] }) {
+        if (data) {
+            if (data.id) {
+                await ReactionManager.deleteMany(data.id);
+            } else if (data.ids) {
+                await ReactionManager.deleteManyByResources(data.ids);
+            }
         }
     }
 }

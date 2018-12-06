@@ -20,6 +20,13 @@ const reaction2: IReaction = {
     user: 'a@b',
 };
 
+const reaction3: IReaction = {
+    resource: '5bf54919902f5a46f0fb2273',
+    resourceType: ResourceType.Video,
+    type: ReactionType.Like,
+    user: 'a@c',
+};
+
 const reactionArr: IReaction[] = [reaction, reaction2];
 const invalidReaction: any = {
     resource: '12',
@@ -330,6 +337,47 @@ describe('Reaction Repository', function () {
                 const getReaction2 = await ReactionRepository.getOne(reaction2);
                 expect(getReaction).to.exist;
                 expect(getReaction2).to.exist;
+            });
+        });
+    });
+
+    describe('#deleteManyByResources()', function () {
+
+        let createdReaction: IReaction;
+        let createdReaction2: IReaction;
+        let createdReaction3: IReaction;
+
+        beforeEach(async function () {
+            createdReaction = await ReactionRepository.create(reaction);
+            createdReaction2 = await ReactionRepository.create(reaction2);
+            createdReaction3 = await ReactionRepository.create(reaction3);
+        });
+
+        context('When data is valid', function () {
+
+            it('Should delete documents by resource and return true', async function () {
+                const deleted = await ReactionRepository.deleteManyByResources([createdReaction.resource, createdReaction2.resource, createdReaction3.resource]);
+                expect(deleted).to.exist;
+                expect(deleted).to.be.true;
+
+                const getDeleted = await ReactionRepository.getOne(reaction);
+                const getDeleted2 = await ReactionRepository.getOne(reaction2);
+                const getDeleted3 = await ReactionRepository.getOne(reaction3);
+                expect(getDeleted).to.not.exist;
+                expect(getDeleted2).to.not.exist;
+                expect(getDeleted3).to.not.exist;
+            });
+
+            it('Should return false when document does not exist', async function () {
+                const res = await ReactionRepository.deleteManyByResources([new mongoose.Types.ObjectId().toHexString(), new mongoose.Types.ObjectId().toHexString()]);
+                expect(res).to.be.true;
+
+                const getReaction = await ReactionRepository.getOne(reaction);
+                const getReaction2 = await ReactionRepository.getOne(reaction2);
+                const getReaction3 = await ReactionRepository.getOne(reaction3);
+                expect(getReaction).to.exist;
+                expect(getReaction2).to.exist;
+                expect(getReaction3).to.exist;
             });
         });
     });

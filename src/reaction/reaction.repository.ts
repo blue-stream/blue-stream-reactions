@@ -41,6 +41,14 @@ export class ReactionRepository {
         return Promise.resolve(response.ok === 1);
     }
 
+    static async deleteManyByResources(resources: string[]): Promise<boolean> {
+        const response: { n: Number, ok: Number } = await ReactionModel.deleteMany({
+            resource: { $in: resources },
+        }).exec();
+
+        return Promise.resolve(response.ok === 1);
+    }
+
     static getOne(reactionFilter: Partial<IReaction>)
         : Promise<IReaction | null> {
         if (Object.keys(reactionFilter).length === 0) {

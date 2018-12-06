@@ -28,6 +28,10 @@ export class ReactionManager implements ReactionRepository {
         return ReactionRepository.deleteMany(resource);
     }
 
+    static deleteManyByResources(resources: string[]) {
+        return ReactionRepository.deleteManyByResources(resources);
+    }
+
     static getOne(reactionFilter: Partial<IReaction>) {
         return ReactionRepository.getOne(reactionFilter);
     }
