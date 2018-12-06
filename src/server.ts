@@ -61,7 +61,6 @@ export class Server {
         }
     }
 
-
     private initializeErrorHandler() {
         this.app.use(userErrorHandler);
         this.app.use(serverErrorHandler);
