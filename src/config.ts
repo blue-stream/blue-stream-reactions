@@ -21,7 +21,7 @@ export const config = {
         username: process.env.RMQ_USERNAME || 'guest',
     },
     server: {
-        port: 5004,
+        port:  +(process.env.PORT || 3000),
         name: 'reaction',
     },
     cors: {

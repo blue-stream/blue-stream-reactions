@@ -55,13 +55,11 @@ export class Server {
         this.app.use(bodyParser.json());
         this.app.use(bodyParser.urlencoded({ extended: true }));
 
-
         if (config.authentication.required) {
             this.app.use(Authenticator.initialize());
             this.app.use(Authenticator.middleware);
         }
     }
-
 
     private initializeErrorHandler() {
         this.app.use(userErrorHandler);
