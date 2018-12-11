@@ -24,7 +24,7 @@ export class ReactionBroker {
             if (data.id) {
                 await ReactionManager.deleteMany(data.id);
             } else if (data.ids) {
-                await ReactionManager.deleteManyByResources(data.ids);
+                await ReactionManager.deleteMany(data.ids);
             }
         }
     }

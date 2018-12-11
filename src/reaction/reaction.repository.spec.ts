@@ -310,10 +310,12 @@ describe('Reaction Repository', function () {
 
         let createdReaction: IReaction;
         let createdReaction2: IReaction;
+        let createdReaction3: IReaction;
 
         beforeEach(async function () {
             createdReaction = await ReactionRepository.create(reaction);
             createdReaction2 = await ReactionRepository.create(reaction2);
+            createdReaction3 = await ReactionRepository.create(reaction3);
         });
 
         context('When data is valid', function () {
@@ -329,34 +331,8 @@ describe('Reaction Repository', function () {
                 expect(getDeleted2).to.not.exist;
             });
 
-            it('Should return false when document does not exist', async function () {
-                const res = await ReactionRepository.deleteMany(new mongoose.Types.ObjectId().toHexString());
-                expect(res).to.be.true;
-
-                const getReaction = await ReactionRepository.getOne(reaction);
-                const getReaction2 = await ReactionRepository.getOne(reaction2);
-                expect(getReaction).to.exist;
-                expect(getReaction2).to.exist;
-            });
-        });
-    });
-
-    describe('#deleteManyByResources()', function () {
-
-        let createdReaction: IReaction;
-        let createdReaction2: IReaction;
-        let createdReaction3: IReaction;
-
-        beforeEach(async function () {
-            createdReaction = await ReactionRepository.create(reaction);
-            createdReaction2 = await ReactionRepository.create(reaction2);
-            createdReaction3 = await ReactionRepository.create(reaction3);
-        });
-
-        context('When data is valid', function () {
-
-            it('Should delete documents by resource and return true', async function () {
-                const deleted = await ReactionRepository.deleteManyByResources([createdReaction.resource, createdReaction2.resource, createdReaction3.resource]);
+            it('Should delete documents by resources and return true', async function () {
+                const deleted = await ReactionRepository.deleteMany([createdReaction.resource, createdReaction2.resource, createdReaction3.resource]);
                 expect(deleted).to.exist;
                 expect(deleted).to.be.true;
 
@@ -369,7 +345,17 @@ describe('Reaction Repository', function () {
             });
 
             it('Should return false when document does not exist', async function () {
-                const res = await ReactionRepository.deleteManyByResources([new mongoose.Types.ObjectId().toHexString(), new mongoose.Types.ObjectId().toHexString()]);
+                const res = await ReactionRepository.deleteMany(new mongoose.Types.ObjectId().toHexString());
+                expect(res).to.be.true;
+
+                const getReaction = await ReactionRepository.getOne(reaction);
+                const getReaction2 = await ReactionRepository.getOne(reaction2);
+                expect(getReaction).to.exist;
+                expect(getReaction2).to.exist;
+            });
+
+            it('Should return false when documents does not exist', async function () {
+                const res = await ReactionRepository.deleteMany([new mongoose.Types.ObjectId().toHexString(), new mongoose.Types.ObjectId().toHexString()]);
                 expect(res).to.be.true;
 
                 const getReaction = await ReactionRepository.getOne(reaction);

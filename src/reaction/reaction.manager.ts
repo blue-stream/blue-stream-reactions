@@ -24,12 +24,8 @@ export class ReactionManager implements ReactionRepository {
         return ReactionRepository.delete(resource, user);
     }
 
-    static deleteMany(resource: string) {
+    static deleteMany(resource: string[] | string) {
         return ReactionRepository.deleteMany(resource);
-    }
-
-    static deleteManyByResources(resources: string[]) {
-        return ReactionRepository.deleteManyByResources(resources);
     }
 
     static getOne(reactionFilter: Partial<IReaction>) {

@@ -33,18 +33,18 @@ export class ReactionRepository {
         return Promise.resolve(response.n === 1 && response.ok === 1);
     }
 
-    static async deleteMany(resource: string): Promise<boolean> {
-        const response: { n: Number, ok: Number } = await ReactionModel.deleteMany({
-            resource,
-        }).exec();
+    static async deleteMany(resource: string[] | string): Promise<boolean> {
+        let response: { n: Number, ok: Number };
 
-        return Promise.resolve(response.ok === 1);
-    }
-
-    static async deleteManyByResources(resources: string[]): Promise<boolean> {
-        const response: { n: Number, ok: Number } = await ReactionModel.deleteMany({
-            resource: { $in: resources },
-        }).exec();
+        if (resource instanceof Array) {
+            response = await ReactionModel.deleteMany({
+                resource: { $in: resource },
+            }).exec();
+        } else {
+            response = await ReactionModel.deleteMany({
+                resource,
+            }).exec();
+        }
 
         return Promise.resolve(response.ok === 1);
     }
