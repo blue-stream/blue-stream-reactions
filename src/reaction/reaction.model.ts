@@ -37,4 +37,6 @@ const reactionSchema: mongoose.Schema = new mongoose.Schema(
         id: false,
     });
 
+reactionSchema.index({ resource: 1, user: -1 });
+
 export const ReactionModel = mongoose.model<IReaction & mongoose.Document>('Reaction', reactionSchema);
