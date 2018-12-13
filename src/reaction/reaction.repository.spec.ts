@@ -71,6 +71,7 @@ const reactionFilter: Partial<IReaction> = {
 const reactionDataToUpdate: Partial<IReaction> = { type: ReactionType.Dislike };
 const unexistingReaction: Partial<IReaction> = {
     resource: '5bf54919902f5a46a0fb2e33',
+    user: 'aaaa@vavaav',
 };
 const unknownProperty: Object = { unknownProperty: true };
 
@@ -287,7 +288,7 @@ describe('Reaction Repository', function () {
                 expect(deleted).to.exist;
                 expect(deleted).to.be.true;
 
-                const getDeleted = await ReactionRepository.getOne(reaction);
+                const getDeleted = await ReactionRepository.getOne(reaction.resource, reaction.user);
                 expect(getDeleted).to.not.exist;
             });
 
@@ -325,8 +326,8 @@ describe('Reaction Repository', function () {
                 expect(deleted).to.exist;
                 expect(deleted).to.be.true;
 
-                const getDeleted = await ReactionRepository.getOne(reaction);
-                const getDeleted2 = await ReactionRepository.getOne(reaction2);
+                const getDeleted = await ReactionRepository.getOne(reaction.resource, reaction.user);
+                const getDeleted2 = await ReactionRepository.getOne(reaction2.resource, reaction2.user);
                 expect(getDeleted).to.not.exist;
                 expect(getDeleted2).to.not.exist;
             });
@@ -336,9 +337,9 @@ describe('Reaction Repository', function () {
                 expect(deleted).to.exist;
                 expect(deleted).to.be.true;
 
-                const getDeleted = await ReactionRepository.getOne(reaction);
-                const getDeleted2 = await ReactionRepository.getOne(reaction2);
-                const getDeleted3 = await ReactionRepository.getOne(reaction3);
+                const getDeleted = await ReactionRepository.getOne(reaction.resource, reaction.user);
+                const getDeleted2 = await ReactionRepository.getOne(reaction2.resource, reaction2.user);
+                const getDeleted3 = await ReactionRepository.getOne(reaction3.resource, reaction3.user);
                 expect(getDeleted).to.not.exist;
                 expect(getDeleted2).to.not.exist;
                 expect(getDeleted3).to.not.exist;
@@ -348,8 +349,8 @@ describe('Reaction Repository', function () {
                 const res = await ReactionRepository.deleteMany(new mongoose.Types.ObjectId().toHexString());
                 expect(res).to.be.true;
 
-                const getReaction = await ReactionRepository.getOne(reaction);
-                const getReaction2 = await ReactionRepository.getOne(reaction2);
+                const getReaction = await ReactionRepository.getOne(reaction.resource, reaction.user);
+                const getReaction2 = await ReactionRepository.getOne(reaction2.resource, reaction2.user);
                 expect(getReaction).to.exist;
                 expect(getReaction2).to.exist;
             });
@@ -358,9 +359,9 @@ describe('Reaction Repository', function () {
                 const res = await ReactionRepository.deleteMany([new mongoose.Types.ObjectId().toHexString(), new mongoose.Types.ObjectId().toHexString()]);
                 expect(res).to.be.true;
 
-                const getReaction = await ReactionRepository.getOne(reaction);
-                const getReaction2 = await ReactionRepository.getOne(reaction2);
-                const getReaction3 = await ReactionRepository.getOne(reaction3);
+                const getReaction = await ReactionRepository.getOne(reaction.resource, reaction.user);
+                const getReaction2 = await ReactionRepository.getOne(reaction2.resource, reaction2.user);
+                const getReaction3 = await ReactionRepository.getOne(reaction3.resource, reaction3.user);
                 expect(getReaction).to.exist;
                 expect(getReaction2).to.exist;
                 expect(getReaction3).to.exist;
@@ -378,10 +379,7 @@ describe('Reaction Repository', function () {
             });
 
             it('Should return document by id', async function () {
-                const returnedReaction = await ReactionRepository.getOne({
-                    resource: reaction.resource,
-                    user: reaction.user,
-                } as Partial<IReaction>);
+                const returnedReaction = await ReactionRepository.getOne(reaction.resource, reaction.user);
 
                 expect(returnedReaction).to.exist;
 
@@ -390,30 +388,18 @@ describe('Reaction Repository', function () {
                 }
             });
 
-            it('Should return document by reactionType', async function () {
-                const createdReaction = await ReactionRepository.getOne({
-                    type: reaction.type,
-                } as Partial<IReaction>);
-
-                expect(createdReaction).to.exist;
-
-                for (const prop in reaction) {
-                    expect(createdReaction).to.have.property(prop, reaction[prop as keyof IReaction]);
-                }
-            });
-
             it('Should return null when document does not exist', async function () {
-                const returnedReaction = await ReactionRepository.getOne(unexistingReaction);
+                const returnedReaction = await ReactionRepository.getOne(unexistingReaction.resource!, unexistingReaction.user!);
                 expect(returnedReaction).to.not.exist;
             });
         });
 
         context('When data is invalid', function () {
-            it('Should throw error when filter does not exist', async function () {
+            it('Should throw error when resource and user does not exist', async function () {
                 let hasThrown = false;
 
                 try {
-                    await ReactionRepository.getOne({});
+                    await ReactionRepository.getOne('', '');
                 } catch (err) {
                     hasThrown = true;
                     expect(err).to.exist;
@@ -421,11 +407,6 @@ describe('Reaction Repository', function () {
                 } finally {
                     expect(hasThrown).to.be.true;
                 }
-            });
-
-            it('Should return null when filter is not in the correct format', async function () {
-                const doc = await ReactionRepository.getOne(unknownProperty);
-                expect(doc).to.not.exist;
             });
         });
     });

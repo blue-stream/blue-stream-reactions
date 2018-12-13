@@ -62,7 +62,10 @@ export class ValidRequestMocks {
         headers: {
             authorization: this.authorizationHeader,
         },
-        query: this.reaction,
+        query: {
+            resource: this.reaction.resource,
+            user: this.reaction.user,
+        },
     });
 
     getMany = createRequest({

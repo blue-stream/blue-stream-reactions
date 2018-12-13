@@ -49,14 +49,15 @@ export class ReactionRepository {
         return Promise.resolve(response.ok === 1);
     }
 
-    static getOne(reactionFilter: Partial<IReaction>)
+    static getOne(resource: string, user: string)
         : Promise<IReaction | null> {
-        if (Object.keys(reactionFilter).length === 0) {
-            throw new ServerError('Filter is required.');
+        if (!resource || !user) {
+            throw new ServerError('Resource and User are required.');
         }
-        return ReactionModel.findOne(
-            reactionFilter,
-        ).exec();
+        return ReactionModel.findOne({
+            resource,
+            user,
+        }).exec();
     }
 
     static getMany(reactionFilter: Partial<IReaction>)

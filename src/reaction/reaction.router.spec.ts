@@ -18,7 +18,7 @@ import { ReactionManager } from './reaction.manager';
 import { sign } from 'jsonwebtoken';
 import { ReactionRepository } from './reaction.repository';
 
-describe('Reaction Module', function () {
+describe('Reaction Router', function () {
     let server: Server;
 
     const authorizationHeader = `Bearer ${sign('mock-user', config.authentication.secret)}`;
@@ -79,8 +79,9 @@ describe('Reaction Module', function () {
     };
 
     const reactionDataToUpdate: Partial<IReaction> = { type: ReactionType.Dislike };
-    const unexistingReaction: Partial<IReaction> = {
+    const unexistingReaction = {
         resource: '5bf54919902f5a46a0fb2e33',
+        user: 'a@aaaab',
     };
     const unknownProperty: Object = { unknownProperty: true };
 
@@ -329,7 +330,7 @@ describe('Reaction Module', function () {
             it('Should return error when reaction not found', function (done: MochaDone) {
                 request(server.app)
                     .get('/api/reaction/one')
-                    .query(unexistingReaction)
+                    .query({ resource: unexistingReaction.resource, user: unexistingReaction.user })
                     .set({ authorization: authorizationHeader })
                     .expect(404)
                     .expect('Content-Type', /json/)

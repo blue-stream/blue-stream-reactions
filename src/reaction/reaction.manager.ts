@@ -4,10 +4,7 @@ import { ReactionRepository } from './reaction.repository';
 export class ReactionManager implements ReactionRepository {
     static async create(reaction: IReaction) {
         const existingReaction: IReaction | null =
-            await ReactionManager.getOne({
-                user: reaction.user,
-                resource: reaction.resource,
-            });
+            await ReactionManager.getOne(reaction.user, reaction.resource);
 
         if (existingReaction) {
             return Promise.resolve(existingReaction);
@@ -28,8 +25,8 @@ export class ReactionManager implements ReactionRepository {
         return ReactionRepository.deleteMany(resource);
     }
 
-    static getOne(reactionFilter: Partial<IReaction>) {
-        return ReactionRepository.getOne(reactionFilter);
+    static getOne(resource: string, user: string) {
+        return ReactionRepository.getOne(resource, user);
     }
 
     static getMany(reactionFilter: Partial<IReaction>) {
