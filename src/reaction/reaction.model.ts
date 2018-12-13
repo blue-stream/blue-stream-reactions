@@ -28,6 +28,7 @@ const reactionSchema: mongoose.Schema = new mongoose.Schema(
         },
     },
     {
+        versionKey: false,
         autoIndex: false,
         timestamps: {
             createdAt: false,
