@@ -1,4 +1,7 @@
 export const config = {
+    rpc: {
+        port: +(process.env.RPC_PORT || 6001),
+    },
     db: {
         host: process.env.DB_SERVER || 'localhost',
         name: process.env.DB_NAME || 'blue-stream-reaction',
@@ -21,7 +24,7 @@ export const config = {
         username: process.env.RMQ_USERNAME || 'guest',
     },
     server: {
-        port:  +(process.env.PORT || 3000),
+        port: +(process.env.PORT || 3000),
         name: 'reaction',
     },
     cors: {
