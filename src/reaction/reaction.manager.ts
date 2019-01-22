@@ -33,14 +33,8 @@ export class ReactionManager implements ReactionRepository {
         return ReactionRepository.getMany(reactionFilter);
     }
 
-    static getAllTypesAmountsOfResource(resource: string) {
-        const reactionTypes: ReactionType[] = (<any>Object).values(ReactionType);
-
-        return Promise.all(reactionTypes.map((type) => {
-            return ReactionManager.getAmount({ resource, type }).then((amount) => {
-                return ({ type, amount });
-            });
-        }));
+    static getAllTypesAmountsOfResource(resources: string | string[]) {
+        return ReactionRepository.getAllTypesAmounts(resources);
     }
 
     static getAmount(reactionFilter: Partial<IReaction>) {

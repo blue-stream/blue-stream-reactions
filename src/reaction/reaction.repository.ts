@@ -67,6 +67,56 @@ export class ReactionRepository {
         ).exec();
     }
 
+    static getAllTypesAmounts(resources: string | string[]) {
+        return ReactionModel
+            .aggregate()
+            .match({
+                resource: {
+                    $in: typeof resources === 'string' ? [resources] : resources,
+                },
+            })
+            .group({
+                _id: {
+                    resource: '$resource',
+                    type: '$type',
+                },
+                amount: {
+                    $sum: 1,
+                },
+            })
+            .project({
+                resource: '$_id.resource',
+                type: '$_id.type',
+                amount: '$amount',
+                _id: 0,
+            })
+            .group({
+                _id: '$resource',
+                types: {
+                    $push: {
+                        type: '$type',
+                        amount: '$amount',
+                    },
+                },
+            })
+            .project({
+                _id: 0,
+                resource: '$_id',
+                types: {
+                    $arrayToObject: {
+                        $map: {
+                            input: '$types',
+                            as: 'el',
+                            in: {
+                                k: '$$el.type',
+                                v: '$$el.amount',
+                            },
+                        },
+                    },
+                },
+            });
+    }
+
     static getAmount(reactionFilter: Partial<IReaction>)
         : Promise<number> {
         return ReactionModel
