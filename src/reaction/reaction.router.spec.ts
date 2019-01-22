@@ -400,12 +400,11 @@ describe('Reaction Router', function () {
                         expect(res.status).to.equal(200);
                         expect(res).to.have.property('body');
                         expect(res.body).to.be.an('Array');
-                        expect(res.body).to.be.of.length(numberOfTypes);
+                        expect(res.body).to.be.of.length(1);
 
-                        ((<any>Object).values(ReactionType)).forEach((reactionType: string, index: number) => {
+                        ((<any>Object).values(ReactionType)).forEach((reactionType: string) => {
                             const amountOfType: number = reactionArr.reduce(
                                 (amount, currReaction) => {
-
                                     if (currReaction.type.toString() === reactionType) {
                                         return amount + 1;
                                     }
@@ -414,15 +413,14 @@ describe('Reaction Router', function () {
                                 },
                                 0);
 
-                            expect(res.body[index]).to.have.property('type', reactionType);
-                            expect(res.body[index]).to.have.property('amount', amountOfType);
+                            expect(res.body[0].types).to.have.property(reactionType, amountOfType);
                         });
 
                         done();
                     });
             });
 
-            it('Should return 0 for each reaction type when resource not found', function (done: MochaDone) {
+            it('Should return empty array when resource not found', function (done: MochaDone) {
                 request(server.app)
                     .get(`/api/reaction/${unexistingReaction.resource}/amounts`)
                     .set({ authorization: authorizationHeader })
@@ -434,23 +432,7 @@ describe('Reaction Router', function () {
                         expect(res.status).to.equal(200);
                         expect(res).to.have.property('body');
                         expect(res.body).to.be.an('Array');
-                        expect(res.body).to.be.of.length(numberOfTypes);
-
-                        ((<any>Object).values(ReactionType)).forEach((reactionType: string, index: number) => {
-                            const amountOfType: number = reactionArr.reduce(
-                                (amount, currReaction) => {
-
-                                    if (currReaction.type.toString() === reactionType) {
-                                        return amount + 1;
-                                    }
-
-                                    return amount;
-                                },
-                                0);
-
-                            expect(res.body[index]).to.have.property('type', reactionType);
-                            expect(res.body[index]).to.have.property('amount', 0);
-                        });
+                        expect(res.body).to.be.of.length(0);
 
                         done();
                     });
