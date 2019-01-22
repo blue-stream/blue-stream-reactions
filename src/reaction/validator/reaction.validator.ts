@@ -35,7 +35,10 @@ export class ReactionValidator {
     }
 
     static canGetOne(req: Request, res: Response, next: NextFunction) {
-        next();
+        next(
+            ReactionValidator.validateResource(req.query.resource) ||
+            ReactionValidator.validateUser(req.query.user),
+        );
     }
 
     static canGetMany(req: Request, res: Response, next: NextFunction) {
