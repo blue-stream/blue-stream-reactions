@@ -6,13 +6,12 @@ import {
     ResourceTypeInvalidError,
     UserInvalidError,
 } from '../../utils/errors/userErrors';
-import { IReaction, ReactionType } from '../reaction.interface';
 
 export class ReactionValidator {
 
     static canCreate(req: Request, res: Response, next: NextFunction) {
         next(
-            ReactionValidator.validateUser(req.body.user) ||
+            ReactionValidator.validateUser(req.user.id) ||
             ReactionValidator.validateReactionType(req.body.type) ||
             ReactionValidator.validateResource(req.body.resource) ||
             ReactionValidator.validateResourceType(req.body.resourceType),
@@ -22,7 +21,7 @@ export class ReactionValidator {
     static canUpdate(req: Request, res: Response, next: NextFunction) {
         next(
             ReactionValidator.validateResource(req.query.resource) ||
-            ReactionValidator.validateUser(req.query.user) ||
+            ReactionValidator.validateUser(req.user.id) ||
             ReactionValidator.validateReactionType(req.body.type),
         );
     }
@@ -30,7 +29,7 @@ export class ReactionValidator {
     static canDelete(req: Request, res: Response, next: NextFunction) {
         next(
             ReactionValidator.validateResource(req.query.resource) ||
-            ReactionValidator.validateUser(req.query.user),
+            ReactionValidator.validateUser(req.user.id),
         );
     }
 

@@ -20,7 +20,7 @@ export class ValidRequestMocks {
 
     readonly reactionFilter = this.reaction;
 
-    authorizationHeader = `Bearer ${sign('mock-user', config.authentication.secret)}`;
+    authorizationHeader = `Bearer ${sign({ id: 'a@a' }, config.authentication.secret)}`;
 
     create = createRequest({
         method: 'POST',
@@ -29,6 +29,7 @@ export class ValidRequestMocks {
             authorization: this.authorizationHeader,
         },
         body: this.reaction,
+        user: { id: 'a@a' },
     });
 
     update = createRequest({
@@ -39,9 +40,9 @@ export class ValidRequestMocks {
         },
         query: {
             resource: this.reaction.resource,
-            user: this.reaction.user,
         },
         body: { type: this.reaction.type },
+        user: { id: 'a@a' },
     });
 
     delete = createRequest({
@@ -52,8 +53,8 @@ export class ValidRequestMocks {
         },
         query: {
             resource: this.reaction.resource,
-            user: this.reaction.user,
         },
+        user: { id: 'a@a' },
     });
 
     getOne = createRequest({

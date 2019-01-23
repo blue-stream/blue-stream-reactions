@@ -1,14 +1,7 @@
 import { expect } from 'chai';
-import { Types } from 'mongoose';
 import { ReactionValidator } from './reaction.validator';
 import { ValidRequestMocks, responseMock } from './reaction.mocks';
-import {
-    ReactionNotFoundError,
-    ReactionTypeInvalidError,
-    ResourceInvalidError,
-    ResourceTypeInvalidError,
-    UserInvalidError,
-} from '../../utils/errors/userErrors';
+import { ResourceInvalidError } from '../../utils/errors/userErrors';
 
 describe('Reaction Validator Middleware', function () {
     describe('Create Validator', function () {

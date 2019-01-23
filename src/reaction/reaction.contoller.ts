@@ -2,17 +2,16 @@ import { Request, Response } from 'express';
 import { ReactionManager } from './reaction.manager';
 
 import { ReactionNotFoundError } from '../utils/errors/userErrors';
-import { UpdateWriteOpResult } from 'mongodb';
 
-type UpdateResponse = UpdateWriteOpResult['result'];
 export class ReactionController {
     static async create(req: Request, res: Response) {
-        res.json(await ReactionManager.create(req.body));
+        const reaction = { ...req.body, user: req.user.id };
+        res.json(await ReactionManager.create(reaction));
     }
 
     static async update(req: Request, res: Response) {
         const updated = await ReactionManager.update(
-            req.query.resource, req.query.user, req.body.type);
+            req.query.resource, req.user.id, req.body.type);
         if (!updated) {
             throw new ReactionNotFoundError();
         }
@@ -22,7 +21,7 @@ export class ReactionController {
 
     static async delete(req: Request, res: Response) {
         const deleted = await ReactionManager.delete(
-            req.query.resource, req.query.user);
+            req.query.resource, req.user.id);
         if (!deleted) {
             throw new ReactionNotFoundError();
         }

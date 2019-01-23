@@ -21,7 +21,7 @@ import { ReactionRepository } from './reaction.repository';
 describe('Reaction Router', function () {
     let server: Server;
 
-    const authorizationHeader = `Bearer ${sign('mock-user', config.authentication.secret)}`;
+    const authorizationHeader = `Bearer ${sign({ id: 'a@a' }, config.authentication.secret)}`;
 
     const existingResource: string = '5bf54919902f5a46a0fb2e73';
     const reaction: IReaction = {
@@ -208,7 +208,7 @@ describe('Reaction Router', function () {
                     .put('/api/reaction/')
                     .send({ type: invalidTypeReaction.type })
                     .set({ authorization: authorizationHeader })
-                    .query({ resource: reaction.resource, user: reaction.user })
+                    .query({ resource: reaction.resource })
                     .expect(400)
                     .expect('Content-Type', /json/)
                     .end((error: Error, res: request.Response) => {
@@ -238,7 +238,7 @@ describe('Reaction Router', function () {
                 request(server.app)
                     .delete('/api/reaction/')
                     .set({ authorization: authorizationHeader })
-                    .query({ resource: reaction.resource, user: reaction.user })
+                    .query({ resource: reaction.resource })
                     .expect(200)
                     .expect('Content-Type', /json/)
                     .end((error: Error, res: request.Response) => {
@@ -256,7 +256,7 @@ describe('Reaction Router', function () {
                 request(server.app)
                     .delete('/api/reaction/')
                     .set({ authorization: authorizationHeader })
-                    .query({ resource: unexistingReaction.resource, user: reaction.user })
+                    .query({ resource: unexistingReaction.resource })
                     .expect(404)
                     .expect('Content-Type', /json/)
                     .end((error: Error, res: request.Response) => {
@@ -266,32 +266,6 @@ describe('Reaction Router', function () {
                         expect(res.body).to.be.an('object');
                         expect(res.body).to.have.property('type', ReactionNotFoundError.name);
                         expect(res.body).to.have.property('message', new ReactionNotFoundError().message);
-
-                        done();
-                    });
-            });
-        });
-
-        context('When request is invalid', function () {
-            beforeEach(async function () {
-                await mongoose.connection.db.dropDatabase();
-                returnedReaction = await ReactionManager.create(reaction);
-            });
-
-            it('Should return error status when user is invalid', function (done: MochaDone) {
-                request(server.app)
-                    .delete('/api/reaction/')
-                    .set({ authorization: authorizationHeader })
-                    .query({ resource: reaction.resource, user: invalidUserReaction.user })
-                    .expect(400)
-                    .expect('Content-Type', /json/)
-                    .end((error: Error, res: request.Response) => {
-                        expect(error).to.not.exist;
-                        expect(res.status).to.equal(400);
-                        expect(res).to.have.property('body');
-                        expect(res.body).to.be.an('object');
-                        expect(res.body).to.have.property('type', UserInvalidError.name);
-                        expect(res.body).to.have.property('message', new UserInvalidError().message);
 
                         done();
                     });
