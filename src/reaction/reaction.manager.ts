@@ -37,6 +37,10 @@ export class ReactionManager implements ReactionRepository {
         return ReactionRepository.getAllTypesAmounts(resources);
     }
 
+    static getUserReactedResources(resources: string[], user: string) {
+        return ReactionRepository.getUserReactedResources(resources, user);
+    }
+
     static getAmount(reactionFilter: Partial<IReaction>) {
         return ReactionRepository.getAmount(reactionFilter);
     }

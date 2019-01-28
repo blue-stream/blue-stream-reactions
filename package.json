@@ -1,5 +1,5 @@
 {
-  "name": "blue-stream-template",
+  "name": "blue-stream-reaction",
   "version": "0.0.0",
   "description": "Blue Stream micro-service template for future services",
   "main": "index.js",
@@ -13,7 +13,7 @@
     "coverage-test": "cross-env NODE_ENV=test nyc check-coverage --lines 95 --functions 95 --branches 95",
     "tslint": "tslint -c tslint.json -p tsconfig.json"
   },
-  "author": "Ron Borysovski, Almog Vagman, Saar Mornel & Yonatan Tal",
+  "author": "Ron Borysovski, Almog Vagman",
   "license": "ISC",
   "devDependencies": {
     "@types/amqplib": "^0.5.9",
