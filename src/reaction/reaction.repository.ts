@@ -67,6 +67,22 @@ export class ReactionRepository {
         ).exec();
     }
 
+    static getUserReactedResources(resources: string[], user: string) {
+        return ReactionModel.find(
+            {
+                user,
+                resource: {
+                    $in: resources,
+                },
+            },
+            {
+                _id: 0,
+                resource: 1,
+                type: 1,
+            },
+        ).exec();
+    }
+
     static getAllTypesAmounts(resources: string | string[]) {
         return ReactionModel
             .aggregate()
