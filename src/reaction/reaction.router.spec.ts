@@ -373,8 +373,9 @@ describe('Reaction Router', function () {
                         expect(res).to.exist;
                         expect(res.status).to.equal(200);
                         expect(res).to.have.property('body');
-                        expect(res.body).to.be.an('Array');
-                        expect(res.body).to.be.of.length(1);
+                        expect(res.body).to.be.an('object');
+                        expect(res.body).to.have.property('resource');
+                        expect(res.body).to.have.property('types');
 
                         ((<any>Object).values(ReactionType)).forEach((reactionType: string) => {
                             const amountOfType: number = reactionArr.reduce(
@@ -387,7 +388,7 @@ describe('Reaction Router', function () {
                                 },
                                 0);
 
-                            expect(res.body[0].types).to.have.property(reactionType, amountOfType);
+                            expect(res.body.types).to.have.property(reactionType, amountOfType);
                         });
 
                         done();
@@ -405,8 +406,7 @@ describe('Reaction Router', function () {
                         expect(res).to.exist;
                         expect(res.status).to.equal(200);
                         expect(res).to.have.property('body');
-                        expect(res.body).to.be.an('Array');
-                        expect(res.body).to.be.of.length(0);
+                        expect(res.body).to.be.equal('');
 
                         done();
                     });
