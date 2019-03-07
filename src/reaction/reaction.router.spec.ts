@@ -301,20 +301,18 @@ describe('Reaction Router', function () {
                     });
             });
 
-            it('Should return error when reaction not found', function (done: MochaDone) {
+            it('Should return null when reaction not found', function (done: MochaDone) {
                 request(server.app)
                     .get('/api/reaction/one')
                     .query({ resource: unexistingReaction.resource, user: unexistingReaction.user })
                     .set({ authorization: authorizationHeader })
-                    .expect(404)
+                    .expect(200)
                     .expect('Content-Type', /json/)
                     .end((error: Error, res: request.Response) => {
                         expect(res).to.exist;
-                        expect(res.status).to.equal(404);
+                        expect(res.status).to.equal(200);
                         expect(res).to.have.property('body');
-                        expect(res.body).to.be.an('object');
-                        expect(res.body).to.have.property('type', ReactionNotFoundError.name);
-                        expect(res.body).to.have.property('message', new ReactionNotFoundError().message);
+                        expect(res.body).to.be.null;
 
                         done();
                     });
