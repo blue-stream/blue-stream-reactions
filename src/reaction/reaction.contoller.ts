@@ -32,7 +32,7 @@ export class ReactionController {
     static async getOne(req: Request, res: Response) {
         const reaction = await ReactionManager.getOne(req.query.resource, req.query.user);
         if (!reaction) {
-            throw new ReactionNotFoundError();
+            res.json(null);
         }
 
         res.json(reaction);
