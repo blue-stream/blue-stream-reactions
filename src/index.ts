@@ -1,9 +1,8 @@
 import * as mongoose from 'mongoose';
 import * as rabbit from './utils/rabbit';
 import { Server } from './server';
-import { Logger } from './utils/logger';
+import { log } from './utils/logger';
 import { config } from './config';
-import { syslogSeverityLevels } from 'llamajs';
 import { ReactionBroker } from './reaction/reaction.broker';
 import { RPCServer } from './utils/rpc.server';
 
@@ -38,8 +37,7 @@ process.on('SIGINT', async () => {
 
     console.log('[MongoDB] connected');
 
-    Logger.configure();
-    Logger.log(syslogSeverityLevels.Informational, 'Server Started', `Port: ${config.server.port}`);
+    log('info' , 'Server Started', `Port: ${config.server.port}`);
 
     await rabbit.connect();
     await ReactionBroker.subscribe();

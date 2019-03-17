@@ -49,10 +49,11 @@
     "express": "^4.16.4",
     "helmet": "^3.14.0",
     "jayson": "^2.1.1",
-    "llamajs": "^0.2.0",
     "mongoose": "^5.3.8",
     "morgan": "^1.9.1",
     "passport": "^0.4.0",
-    "passport-jwt": "^4.0.0"
+    "passport-jwt": "^4.0.0",
+    "winston": "^3.2.1",
+    "winston-elasticsearch": "^0.7.9"
   }
 }
