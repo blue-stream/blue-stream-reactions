@@ -37,7 +37,7 @@ process.on('SIGINT', async () => {
 
     console.log('[MongoDB] connected');
 
-    log('info' , 'Server Started', `Port: ${config.server.port}`);
+    log('verbose' , 'Server Started', `Port: ${config.server.port}`);
 
     await rabbit.connect();
     await ReactionBroker.subscribe();
