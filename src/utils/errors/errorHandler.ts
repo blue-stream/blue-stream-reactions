@@ -15,10 +15,10 @@ export function userErrorHandler(error: Error, req: express.Request, res: expres
             message: error.message,
         });
 
-        next();
-    } else {
-        next(error);
+        return next();
     }
+
+    return next(error);
 }
 
 export function serverErrorHandler(error: Error, req: express.Request, res: express.Response, next: express.NextFunction) {
@@ -33,10 +33,10 @@ export function serverErrorHandler(error: Error, req: express.Request, res: expr
             message: error.message,
         });
 
-        next();
-    } else {
-        next(error);
+        return next();
     }
+
+    return next(error);
 }
 
 export function unknownErrorHandler(error: Error, req: express.Request, res: express.Response, next: express.NextFunction) {
@@ -50,5 +50,5 @@ export function unknownErrorHandler(error: Error, req: express.Request, res: exp
         message: error.message,
     });
 
-    next(error);
+    return next(error);
 }
