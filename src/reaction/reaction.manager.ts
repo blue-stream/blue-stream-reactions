@@ -41,6 +41,16 @@ export class ReactionManager implements ReactionRepository {
         return ReactionRepository.getUserReactedResources(resources, user);
     }
 
+    static getReactionAmountByTypeAndResourceType(
+        type: ReactionType,
+        resourceType: ResourceType,
+        startIndex?: number,
+        endIndex?: number,
+        sortBy?: string,
+        sortOrder?: '' | '-') {
+        return ReactionRepository.getReactionAmountByTypeAndResourceType(type, resourceType, startIndex, endIndex, sortBy, sortOrder);
+    }
+
     static getAmount(reactionFilter: Partial<IReaction>) {
         return ReactionRepository.getAmount(reactionFilter);
     }
