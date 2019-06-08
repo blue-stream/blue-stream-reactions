@@ -1,8 +1,7 @@
 
-import { IReaction, ReactionType } from './reaction.interface';
+import { IReaction, ReactionType, ResourceType } from './reaction.interface';
 import { ReactionModel } from './reaction.model';
 import { ServerError } from '../utils/errors/applicationError';
-import { Document } from 'mongoose';
 
 export class ReactionRepository {
     static create(reaction: IReaction)
@@ -131,6 +130,40 @@ export class ReactionRepository {
                     },
                 },
             });
+    }
+
+    static getReactionAmountByTypeAndResourceType(
+        type: ReactionType,
+        resourceType: ResourceType,
+        startIndex: number = 0,
+        endIndex: number = 20,
+        sortBy: string = 'amount',
+        sortOrder: '' | '-' = '-',
+        ) {
+        return ReactionModel
+            .aggregate()
+            .match({
+                resourceType,
+                type,
+            })
+            .group({
+                _id: {
+                    resource: '$resource',
+                    type: '$type',
+                },
+                amount: {
+                    $sum: 1,
+                },
+            })
+            .project({
+                resource: '$_id.resource',
+                type: '$_id.type',
+                amount: '$amount',
+                _id: 0,
+            })
+            .sort(sortOrder + sortBy)
+            .skip(+startIndex)
+            .limit(+endIndex - +startIndex);
     }
 
     static getAmount(reactionFilter: Partial<IReaction>)
