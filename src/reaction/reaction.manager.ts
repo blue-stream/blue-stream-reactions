@@ -29,8 +29,13 @@ export class ReactionManager implements ReactionRepository {
         return ReactionRepository.getOne(resource, user);
     }
 
-    static getMany(reactionFilter: Partial<IReaction>) {
-        return ReactionRepository.getMany(reactionFilter);
+    static getMany(
+        reactionFilter: Partial<IReaction>,
+        startIndex?: number,
+        endIndex?: number,
+        sortBy?: string,
+        sortOrder?: '' | '-') {
+        return ReactionRepository.getMany(reactionFilter, startIndex, endIndex, sortBy, sortOrder);
     }
 
     static getAllTypesAmountsOfResource(resources: string | string[]) {
