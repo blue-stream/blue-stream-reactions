@@ -46,6 +46,16 @@ export class ReactionController {
         res.json(await ReactionManager.getAmount(req.query));
     }
 
+    static async getReactionAmountByTypeAndResourceType(req: Request, res: Response) {
+        res.json(await ReactionManager.getReactionAmountByTypeAndResourceType(
+            req.query.type,
+            req.query.resourceType,
+            req.query.startIndex,
+            req.query.endIndex,
+            req.query.sortBy,
+            req.query.sortOrder));
+    }
+
     static async getAllTypesAmountsOfResource(req: Request, res: Response) {
         res.json((await ReactionManager.getAllTypesAmountsOfResource(req.params.resource))[0]);
     }
