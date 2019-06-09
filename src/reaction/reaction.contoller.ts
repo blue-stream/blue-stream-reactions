@@ -53,7 +53,8 @@ export class ReactionController {
             req.query.startIndex,
             req.query.endIndex,
             req.query.sortBy,
-            req.query.sortOrder));
+            req.query.sortOrder,
+            req.query.timeLimitInHours));
     }
 
     static async getAllTypesAmountsOfResource(req: Request, res: Response) {
