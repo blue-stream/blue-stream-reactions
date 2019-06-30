@@ -140,6 +140,9 @@ export class ReactionRepository {
             });
     }
 
+    /** Get the reactions amount to the resources of a specific resource type.
+     *  If timelimitInHours is specified, the counter will count reactions that occured only in this time frame.
+     */
     static getReactionAmountByTypeAndResourceType(
         type: ReactionType,
         resourceType: ResourceType,
@@ -147,12 +150,21 @@ export class ReactionRepository {
         endIndex: number = 20,
         sortBy: string = 'amount',
         sortOrder: '' | '-' = '-',
+        timeLimitInHours?: number,
     ) {
         return ReactionModel
             .aggregate()
             .match({
                 resourceType,
                 type,
+                updatedAt:
+                    timeLimitInHours 
+                    ? {
+                        $gte: new Date(+(new Date()) - 1000 * 60 * 60 * timeLimitInHours)
+                    } 
+                    : {
+                        $lte: new Date()
+                    },
             })
             .group({
                 _id: {
@@ -171,13 +183,13 @@ export class ReactionRepository {
             })
             .sort(sortOrder + sortBy)
             .skip(+startIndex)
-            .limit(+endIndex - +startIndex);
+    .limit(+endIndex - +startIndex);
     }
 
     static getAmount(reactionFilter: Partial<IReaction>)
-        : Promise<number> {
-        return ReactionModel
-            .countDocuments(reactionFilter)
-            .exec();
-    }
+        : Promise < number > {
+            return ReactionModel
+                .countDocuments(reactionFilter)
+                .exec();
+        }
 }

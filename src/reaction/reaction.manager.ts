@@ -52,8 +52,9 @@ export class ReactionManager implements ReactionRepository {
         startIndex?: number,
         endIndex?: number,
         sortBy?: string,
-        sortOrder?: '' | '-') {
-        return ReactionRepository.getReactionAmountByTypeAndResourceType(type, resourceType, startIndex, endIndex, sortBy, sortOrder);
+        sortOrder?: '' | '-',
+        timeLimitInHours?: number) {
+        return ReactionRepository.getReactionAmountByTypeAndResourceType(type, resourceType, startIndex, endIndex, sortBy, sortOrder, timeLimitInHours);
     }
 
     static getAmount(reactionFilter: Partial<IReaction>) {
