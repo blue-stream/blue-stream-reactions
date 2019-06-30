@@ -59,11 +59,19 @@ export class ReactionRepository {
         }).exec();
     }
 
-    static getMany(reactionFilter: Partial<IReaction>)
+    static getMany(
+        reactionFilter: Partial<IReaction>,
+        startIndex: number = 0,
+        endIndex: number = 20,
+        sortBy: string = 'updatedAt',
+        sortOrder: '' | '-' = '-')
         : Promise<IReaction[]> {
-        return ReactionModel.find(
-            reactionFilter,
-        ).exec();
+        return ReactionModel
+            .find(reactionFilter)
+            .sort(sortOrder + sortBy)
+            .skip(+startIndex)
+            .limit(+endIndex - +startIndex)
+            .exec();
     }
 
     static getUserReactedResources(resources: string[], user: string) {
