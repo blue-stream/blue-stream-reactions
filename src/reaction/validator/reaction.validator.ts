@@ -52,6 +52,10 @@ export class ReactionValidator {
         next();
     }
 
+    static canGetReactionAmountByTypeAndResourceType(req: Request, res: Response, next: NextFunction) {
+        next();
+    }
+
     private static validateResource(id: string) {
         if (!ReactionValidatons.isIdValid(id)) {
             return new ResourceInvalidError();

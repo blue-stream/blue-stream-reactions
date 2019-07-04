@@ -10,7 +10,8 @@ ReactionRouter.put('/', ReactionValidator.canUpdate, Wrapper.wrapAsync(ReactionC
 ReactionRouter.delete('/', ReactionValidator.canDelete, Wrapper.wrapAsync(ReactionController.delete));
 ReactionRouter.get('/one', ReactionValidator.canGetOne, Wrapper.wrapAsync(ReactionController.getOne));
 ReactionRouter.get('/many', ReactionValidator.canGetMany, Wrapper.wrapAsync(ReactionController.getMany));
-ReactionRouter.get('/:resource/amounts', ReactionValidator.canGetAllTypesAmountsOfResource, Wrapper.wrapAsync(ReactionController.getAllTypesAmountsOfResource));
 ReactionRouter.get('/amount', ReactionValidator.canGetAmount, Wrapper.wrapAsync(ReactionController.getAmount));
+ReactionRouter.get('/reaction/amount', ReactionValidator.canGetReactionAmountByTypeAndResourceType, Wrapper.wrapAsync(ReactionController.getReactionAmountByTypeAndResourceType));
+ReactionRouter.get('/:resource/amounts', ReactionValidator.canGetAllTypesAmountsOfResource, Wrapper.wrapAsync(ReactionController.getAllTypesAmountsOfResource));
 
 export { ReactionRouter };

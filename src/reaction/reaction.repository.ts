@@ -1,8 +1,7 @@
 
-import { IReaction, ReactionType } from './reaction.interface';
+import { IReaction, ReactionType, ResourceType } from './reaction.interface';
 import { ReactionModel } from './reaction.model';
 import { ServerError } from '../utils/errors/applicationError';
-import { Document } from 'mongoose';
 
 export class ReactionRepository {
     static create(reaction: IReaction)
@@ -60,11 +59,19 @@ export class ReactionRepository {
         }).exec();
     }
 
-    static getMany(reactionFilter: Partial<IReaction>)
+    static getMany(
+        reactionFilter: Partial<IReaction>,
+        startIndex: number = 0,
+        endIndex: number = 20,
+        sortBy: string = 'updatedAt',
+        sortOrder: '' | '-' = '-')
         : Promise<IReaction[]> {
-        return ReactionModel.find(
-            reactionFilter,
-        ).exec();
+        return ReactionModel
+            .find(reactionFilter)
+            .sort(sortOrder + sortBy)
+            .skip(+startIndex)
+            .limit(+endIndex - +startIndex)
+            .exec();
     }
 
     static getUserReactedResources(resources: string[], user: string) {
@@ -133,10 +140,56 @@ export class ReactionRepository {
             });
     }
 
-    static getAmount(reactionFilter: Partial<IReaction>)
-        : Promise<number> {
+    /** Get the reactions amount to the resources of a specific resource type.
+     *  If timelimitInHours is specified, the counter will count reactions that occured only in this time frame.
+     */
+    static getReactionAmountByTypeAndResourceType(
+        type: ReactionType,
+        resourceType: ResourceType,
+        startIndex: number = 0,
+        endIndex: number = 20,
+        sortBy: string = 'amount',
+        sortOrder: '' | '-' = '-',
+        timeLimitInHours?: number,
+    ) {
         return ReactionModel
-            .countDocuments(reactionFilter)
-            .exec();
+            .aggregate()
+            .match({
+                resourceType,
+                type,
+                updatedAt:
+                    timeLimitInHours 
+                    ? {
+                        $gte: new Date(+(new Date()) - 1000 * 60 * 60 * timeLimitInHours)
+                    } 
+                    : {
+                        $lte: new Date()
+                    },
+            })
+            .group({
+                _id: {
+                    resource: '$resource',
+                    type: '$type',
+                },
+                amount: {
+                    $sum: 1,
+                },
+            })
+            .project({
+                resource: '$_id.resource',
+                type: '$_id.type',
+                amount: '$amount',
+                _id: 0,
+            })
+            .sort(sortOrder + sortBy)
+            .skip(+startIndex)
+    .limit(+endIndex - +startIndex);
     }
+
+    static getAmount(reactionFilter: Partial<IReaction>)
+        : Promise < number > {
+            return ReactionModel
+                .countDocuments(reactionFilter)
+                .exec();
+        }
 }

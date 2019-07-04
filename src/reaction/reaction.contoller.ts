@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import { ReactionManager } from './reaction.manager';
 
 import { ReactionNotFoundError } from '../utils/errors/userErrors';
+import { IReaction } from './reaction.interface';
 
 export class ReactionController {
     static async create(req: Request, res: Response) {
@@ -39,11 +40,39 @@ export class ReactionController {
     }
 
     static async getMany(req: Request, res: Response) {
-        res.json(await ReactionManager.getMany(req.query));
+        const filter: Partial<IReaction> = {
+            resource: req.query.resource,
+            resourceType: req.query.resourceType,
+            type: req.query.type,
+            user: req.query.user,
+        };
+
+        Object.keys(filter).forEach((key: string) => {
+            return filter[key as keyof IReaction] ===
+                undefined && delete filter[key as keyof IReaction];
+        });
+
+        res.json(await ReactionManager.getMany(
+            filter,
+            req.query.startIndex,
+            req.query.endIndex,
+            req.query.sortBy,
+            req.query.sortOrder));
     }
 
     static async getAmount(req: Request, res: Response) {
         res.json(await ReactionManager.getAmount(req.query));
+    }
+
+    static async getReactionAmountByTypeAndResourceType(req: Request, res: Response) {
+        res.json(await ReactionManager.getReactionAmountByTypeAndResourceType(
+            req.query.type,
+            req.query.resourceType,
+            req.query.startIndex,
+            req.query.endIndex,
+            req.query.sortBy,
+            req.query.sortOrder,
+            req.query.timeLimitInHours));
     }
 
     static async getAllTypesAmountsOfResource(req: Request, res: Response) {
